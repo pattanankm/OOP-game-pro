@@ -67,3 +67,4 @@ Map/tree.tsx
 NPC/Giraffe_Stand.png
 NPC/Penguin_Stand.png
 NPC/Penguin_Stand.tsx
+assets 2.txt
