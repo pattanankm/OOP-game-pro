@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 
 // ⭐ แก้ไขหลัก:
 // 1. เพิ่ม GlyphLayout สำหรับวาดชื่อผู้เล่น
@@ -38,7 +39,7 @@ public class FirstScreen implements Screen {
     private Texture frontTex;
     private Texture currentTex;
     private float playerX, playerY;
-    private float speed = 160f;
+    private final float speed = 160f;
 
     private final float MIN_X = 800;
     private final float MAX_X = 3300;
@@ -52,7 +53,7 @@ public class FirstScreen implements Screen {
 
     private int currentFrame = 0;
     private float walkTime = 0f;
-    private float frameDuration = 0.2f;
+    private final float frameDuration = 0.2f;
     private Texture[] frontWalk, backWalk, leftWalk, rightWalk, Jump;
 
     private boolean isJumping = false;
@@ -70,7 +71,14 @@ public class FirstScreen implements Screen {
     private Sound walkSound;
     private boolean wasMoving = false;
 
-    private Main game;
+    private final Main game;
+    private OrthographicCamera uiCamera;     // กล้องสำหรับ HUD/จอ
+    private InventoryUI inventory;           // มุมซ้ายล่าง
+
+    // โซนที่ยืนแล้วกด E เพื่อเก็บของ (พิกัดโลก ปรับได้ตามแผนที่จริง)
+    private final Rectangle gearZone  = new Rectangle(2250, 2380, 400, 400);
+    private final Rectangle bookZone  = new Rectangle(2330, 2380, 400, 400);
+
 
     public FirstScreen(Main game) {
         this.game = game;
@@ -167,7 +175,16 @@ public class FirstScreen implements Screen {
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
-    }
+
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        uiCamera.update();
+
+        // === NEW: อินเวนทอรีมุมซ้ายล่างของ “จอ” ===
+        // margin 16px, ช่อง 48px, ระยะห่าง 8px
+        inventory = new InventoryUI(16f, 16f, 48f, 8f);
+
+}
 
     @Override
     public void render(float delta) {
@@ -183,6 +200,7 @@ public class FirstScreen implements Screen {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
 
         // วาด NPC
         for (NPC npc : npcs) {
@@ -250,6 +268,11 @@ public class FirstScreen implements Screen {
 
         renderer.render(new int[]{6});
 
+        batch.setProjectionMatrix(uiCamera.combined);
+        batch.begin();
+        inventory.render(batch);   // เงาเทา = ยังไม่เก็บ, สีจริง = เก็บแล้ว
+        batch.end();
+
         // ตรวจสอบการคลิก (รวมเป็นครั้งเดียว)
         if (Gdx.input.justTouched()) {
             Vector3 click = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -274,7 +297,6 @@ public class FirstScreen implements Screen {
             // คลิก trigger area
             if (game.questManager.isQuest1Started() && playerRect.overlaps(triggerArea)) {
                 game.setScreen(new LibraryScreen(game));
-                return;
             }
         }
     }
@@ -310,7 +332,7 @@ public class FirstScreen implements Screen {
 
         // เสียงเดิน
         if (moving && !wasMoving && walkSound != null) {
-            walkSound.loop(1.0f);
+            walkSound.loop(1f);
         } else if (!moving && wasMoving && walkSound != null) {
             walkSound.stop();
         }
@@ -359,7 +381,13 @@ public class FirstScreen implements Screen {
             currentFrame = 0;
         }
 
-        float playerWidth = currentTex.getWidth() / 10f * 1f;
+        Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150); // ใช้กล่องเดิมที่คุณคำนวณอยู่ก็ได้
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            if (playerRect.overlaps(gearZone)) inventory.collectItem("gear");
+            if (playerRect.overlaps(bookZone)) inventory.collectItem("book");
+        }
+
+        float playerWidth = currentTex.getWidth() / 10f;
         float playerHeight = currentTex.getHeight() / 10f * 0.4f;
         float offsetX = (currentTex.getWidth() / 10f - playerWidth) / 2f;
         float offsetY = 0;
@@ -395,7 +423,7 @@ public class FirstScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        float unitScale = 1f / 1f;
+        float unitScale = 1f;
         camera.setToOrtho(false, width * unitScale, height * unitScale);
         camera.position.set(playerX, playerY, 0);
         camera.update();
