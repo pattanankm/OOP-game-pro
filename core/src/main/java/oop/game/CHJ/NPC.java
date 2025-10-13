@@ -7,14 +7,16 @@ public class NPC {
     public float x, y;
     public float width, height;
     public String dialogue;
+    public String name;
 
-    public NPC(float x, float y, String texturePath, String dialogue) {
+    public NPC(float x, float y, String texturePath, String dialogue, String name) {
         this.texture = new Texture(texturePath);
         this.x = x;
         this.y = y;
         this.width = texture.getWidth() / 8f;  // ปรับขนาดให้เท่าตัวละคร
         this.height = texture.getHeight() / 8f;
         this.dialogue = dialogue;
+        this.name = name;
     }
 
     public NPC(Texture npcTex, float x, float y) {

@@ -36,11 +36,11 @@ public class FirstScreen implements Screen {
     private final float MIN_Y = 560; //ขอบล่างสุด
     private final float MAX_Y = 2740; //ขอบบนสุด
 
-    //เพิ่ม array
-    private Array<Rectangle> collisionRects;
-    private Array<NPC> npcs; // ประกาศด้านบน
 
-    // unitScale ควรเป็น field เพื่อให้ใช้ได้ทั้งคลาส
+    private Array<Rectangle> collisionRects;
+    private Array<NPC> npcs;
+
+    // unitScale เพื่อให้ใช้ได้ทั้งคลาส
     private final float unitScale = 1f / 2.5f;
 
     //ใช้กับท่าเดิน
@@ -55,10 +55,28 @@ public class FirstScreen implements Screen {
     //ข้อความ
     private BitmapFont font;
 
+    //แชท
+    private Texture chatIcon;
+    private Texture handIcon;
+
+    private Texture gearIcon;
+    private boolean objectVisible = false;
+
+    private Main game; //เพิ่มตัวแปรไว้เก็บเกมหลัก (แก้ตอนใช้game.ไม่ได้)
+
+    public FirstScreen(Main game) { //สร้าง constructor ใหม่
+        this.game = game;
+    }
+
+
     @Override
     public void show() {
         map = new TmxMapLoader().load("Map/Map.tmx");
         font = new BitmapFont(); // สร้าง font
+        chatIcon = new Texture("Icons/Chat_Icon.png");
+        handIcon = new Texture("Icons/Hand_Icon.png");
+        collisionRects = new Array<>();
+        npcs = new Array<>();
 
         // ขนาดแมพ
         int mapWidth = map.getProperties().get("width", Integer.class);
@@ -88,27 +106,23 @@ public class FirstScreen implements Screen {
 
         camera.update();
 
-        collisionRects = new Array<>();
-
-        npcs = new Array<>();
-
+        //สร้าง npc
         NPC penguin = new NPC(
             2358,  // กลางแมพ X
             2340,  // กลางแมพ Y
             "NPC/Penguin_Stand.png",
-            "Today is very cold~"
+            "Today is very cold~",
+            "Penguin"
         );
         npcs.add(penguin);
 
         NPC giraffe = new NPC(1400,
             1700,
             "NPC/Giraffe_Stand.png",
-            "We are all Entaneer!"
+            "We are all Entaneer!",
+            "Giraffe"
         );
         npcs.add(giraffe);
-
-        // โหลด object layer ที่ชื่อว่า "collision"
-        collisionRects = new Array<>();
 
         MapLayer objectLayer = map.getLayers().get("Collision");
         if (objectLayer != null) {
@@ -122,30 +136,26 @@ public class FirstScreen implements Screen {
             System.out.println("Loaded " + objectLayer.getObjects().getCount() + " collision rectangles");
         }
 
-            // char moving
+        // char moving
         frontWalk = new Texture[] {
             new Texture("CharMove/Girl_FrontLeft1.png"),
             new Texture("CharMove/Girl_FrontStand.png"),
             new Texture("CharMove/Girl_FrontRight1.png"),
         };
-
         backWalk = new Texture[] {
             new Texture("CharMove/Girl_Back.png"),
             new Texture("CharMove/Girl_LeftBack.png")
         };
-
         rightWalk = new Texture[] {
             new Texture("CharMove/Girl_Right.png"),
             new Texture("CharMove/Girl_RightStand.png"),
             new Texture("CharMove/Girl_Right1.png")
         };
-
         leftWalk = new Texture[] {
             new Texture("CharMove/Girl_Left.png"),
             new Texture("CharMove/Girl_LeftStand.png"),
             new Texture("CharMove/Girl_Left1.png")
         };
-
         Jump = new Texture[]{
             new Texture("CharMove/Girl_Jump.png")
         };
@@ -157,8 +167,8 @@ public class FirstScreen implements Screen {
         batch = new SpriteBatch();
 
         // character in the center
-        float spawnX = (mapWidth * tilePixel * 0.5f) / 2.5f;
-        float spawnY = (mapHeight * tilePixel * 0.4f) / 2.5f;
+        float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
+        float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
         playerX = spawnX;
         playerY = spawnY;
 
@@ -174,7 +184,6 @@ public class FirstScreen implements Screen {
         handleInput(delta);
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // clear the screen
-
         camera.update();
         renderer.setView(camera);
 
@@ -189,13 +198,53 @@ public class FirstScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // วาด NPC ก่อน
+        // วาด NPC
         for (NPC npc : npcs) {
             batch.draw(npc.texture, npc.x, npc.y, npc.width, npc.height);
 
             if (npc.isPlayerNear(playerX, playerY, 80f)) {
                 font.draw(batch, npc.dialogue, npc.x, npc.y + npc.height + 20);
+                batch.draw(chatIcon, npc.x + 55 , npc.y + 60, 24, 24);
             }
+        }
+
+        // ถ้าเควส 1 เริ่มแล้ว
+        Rectangle triggerArea = new Rectangle(2200, 2400, 100, 100);// สร้าง rectangle ของ player (hitbox)
+        Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);// ตรวจว่า player อยู่ใกล้ trigger area และผู้เล่นกดหน้าจอ
+
+        // x, y, width, height ปรับตามตำแหน่งข้อความจริง
+        if (game.questManager.isQuest1Started()) {
+            if (playerRect.overlaps(triggerArea)) {
+                font.draw(batch, "Tap to get inside!", 2240, 2440);
+                if (Gdx.input.justTouched()) {
+                    game.setScreen(new LibraryScreen(game));
+                }
+            }
+        }
+
+        // ถ้าเควส 2 เริ่มแล้ว
+        Rectangle handRect = new Rectangle(1600, 800, 50, 50);
+        if (game.questManager.isQuest2Started()) {
+            batch.draw(handIcon, handRect.x, handRect.y, handRect.width, handRect.height);
+            font.draw(batch, "loob!", handRect.x, handRect.y + handRect.height + 20);
+        }
+        // ตรวจคลิก
+        if (Gdx.input.justTouched()) {
+            com.badlogic.gdx.math.Vector3 click = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(click); // แปลงจาก screen -> world
+
+            if (handRect.contains(click.x, click.y)) {
+                objectVisible = true; // ให้ object ใหม่โผล่
+            }
+        }
+
+        gearIcon = new Texture("Icons/gear.PNG");
+        float gearIconX = 1650;
+        float gearIconY = 860;
+
+        // วาด object ใหม่ถ้าเปิดแล้ว
+        if (objectVisible) {
+            batch.draw(gearIcon, gearIconX, gearIconY,40,40);
         }
 
         // วาดตัวละคร
@@ -205,10 +254,30 @@ public class FirstScreen implements Screen {
             currentTex.getHeight() / tileSize
         );
 
+
         batch.end();
 
         // วาด layer ด้านบนทับตัวละคร
         renderer.render(new int[]{6});
+
+        // ====== ตรวจคลิกบน chat icon ======
+        if (Gdx.input.justTouched()) {
+            // หาตำแหน่งคลิกในแกน world
+            com.badlogic.gdx.math.Vector3 click = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(click); // แปลงพิกัดจากจอ -> world
+
+            // วนเช็คทุก NPC ที่อยู่ใกล้
+            for (NPC npc : npcs) {
+                if (npc.isPlayerNear(playerX, playerY, 80f)) {
+                    // สร้างกรอบ hitbox ของ chat icon
+                    Rectangle chatRect = new Rectangle(npc.x + 55, npc.y + 60, 24, 24);
+                    if (chatRect.contains(click.x, click.y)) {
+                        game.setScreen(new DialogueScreen(game, npc)); // ไปหน้าพูดคุย
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private Texture[] previousWalkFrames = null; // เก็บ walkFrames เดิม
@@ -216,7 +285,6 @@ public class FirstScreen implements Screen {
     private void handleInput(float delta) {
         float nextX = playerX;
         float nextY = playerY;
-
         boolean moving = false; // เช็คว่ากดปุ่มเดินหรือไม่
         Texture[] walkFrames = null;
 
@@ -262,6 +330,14 @@ public class FirstScreen implements Screen {
             }, 0.3f); // ระยะเวลากระโดด (วินาที)
         }
 
+        for (NPC npc : npcs) {
+            if (npc.isPlayerNear(playerX, playerY, 80F)) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    game.setScreen(new DialogueScreen(game, npc)); // ไปหน้าพูดคุย
+                }
+            }
+        }
+
         // ถ้าเปลี่ยนทิศทาง รีเซ็ต currentFrame (แก้ปัญหาจอปิดเอง)
         if (walkFrames != previousWalkFrames) {
             currentFrame = 0;
@@ -283,33 +359,6 @@ public class FirstScreen implements Screen {
             // ไม่เดิน → รีเซ็ตเฟรม
             currentFrame = 0;
         }
-
-//        // จัด hitbox
-//        float hitboxHeight = playerHeight; // เอาแค่ประมาณ 80% ล่าง
-//        float hitboxWidth = playerWidth;
-//        float hitboxY = nextY;                     // เริ่มที่เท้าตัวละคร
-//        float hitboxX = nextX + (playerWidth - hitboxWidth) / 2f; // เลื่อนเข้าไปกลางตัว
-
-//        Rectangle playerRect = new Rectangle(
-//            hitboxX,
-//            hitboxY,
-//            hitboxWidth,
-//            hitboxHeight
-//        );
-//        // ตรวจว่าชนไหม
-//        boolean collided = false;
-//        for (Rectangle rect : collisionRects) {
-//            if (playerRect.overlaps(rect)) {
-//                    collided = true;
-//                    break;
-//            }
-//        }
-//
-//        // ถ้าไม่ชน ค่อยอัปเดตตำแหน่ง
-//        if (!collided) {
-//            playerX = nextX;
-//            playerY = nextY;
-//        }
 
         // สร้างกล่อง hitbox ของตัวละคร
         float playerWidth = currentTex.getWidth() / 10f * 1f;
@@ -351,6 +400,8 @@ public class FirstScreen implements Screen {
         }
         if (!collidedY) playerY = nextY;
 
+
+
         // ป้องกันไม่ให้ตัวละครออกจากขอบที่กำหนดเอง
         if (playerX < MIN_X) playerX = MIN_X;
         if (playerY < MIN_Y) playerY = MIN_Y;
@@ -383,6 +434,8 @@ public class FirstScreen implements Screen {
         renderer.dispose();
         batch.dispose();
         frontTex.dispose();
+        chatIcon.dispose();
+        handIcon.dispose();
 
         // dispose NPC textures
         for (NPC npc : npcs) {
