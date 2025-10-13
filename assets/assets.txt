@@ -64,6 +64,15 @@ Map/bulding.tsx
 Map/library.tsx
 Map/tree.png
 Map/tree.tsx
+Menu/character.png
+Menu/female.png
+Menu/male.png
+Menu/menu.png
+Menu/name.png
+Menu/start.png
+Music/StageMusic/FirstScreen.mp3
+Music/StageMusic/Menu.mp3
+Music/Walk/Walk.mp3
 NPC/Giraffe_Stand.png
 NPC/Penguin_Stand.png
 NPC/Penguin_Stand.tsx
