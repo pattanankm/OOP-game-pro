@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.math.Vector3;
 
 public class FirstScreen implements Screen {
     private OrthographicCamera camera;
@@ -24,6 +25,10 @@ public class FirstScreen implements Screen {
     private boolean gameFinished = false;
     private String gameResult = "";
     private Texture whitePixel;
+    private float victoryTimer = 0;
+    private Rectangle tryAgainButton;
+    private Rectangle quitButton;
+    private Vector3 touchPoint;
 
     public FirstScreen() {
         camera = new OrthographicCamera();
@@ -40,6 +45,9 @@ public class FirstScreen implements Screen {
 
         player = new Player(50, 50);
         boss = new ElephantBoss(550, 50);
+        tryAgainButton = new Rectangle(300, 150, 200, 60);
+        quitButton = new Rectangle(300, 70, 200, 60);
+        touchPoint = new Vector3();
 
         audioManager.playBGM();
     }
@@ -69,20 +77,38 @@ public class FirstScreen implements Screen {
             player.render(batch);
             drawUI();
         } else {
-            drawGameOver();
+            if (gameResult.equals("VICTORY")) {
+                drawVictoryScreen(delta);
+            } else {
+                drawGameOver();
+            }
+            drawButtons();
         }
 
         batch.end();
 
         if (!gameFinished) {
             updateGame(delta);
+        } else {
+            handleInput();
+        }
+    }
+
+    private void handleInput() {
+        if (Gdx.input.justTouched()) {
+            camera.unproject(touchPoint.set(Gdx.input.getX(), Gdx.input.getY(), 0));
+
+            if (tryAgainButton.contains(touchPoint.x, touchPoint.y)) {
+                restartGame();
+            } else if (quitButton.contains(touchPoint.x, touchPoint.y)) {
+                Gdx.app.exit();
+            }
         }
     }
 
     private void updateGame(float delta) {
         player.update(delta);
         boss.update(delta, player.getBounds().x, player.getBounds().y);
-
         for (int i = player.getProjectiles().size() - 1; i >= 0; i--) {
             Player.Projectile projectile = player.getProjectiles().get(i);
             if (projectile.getBounds().overlaps(boss.getBounds())) {
@@ -91,13 +117,13 @@ public class FirstScreen implements Screen {
                 audioManager.playSound("shoot");
             }
         }
-
         for (int i = boss.getIcecreams().size() - 1; i >= 0; i--) {
             ElephantBoss.IcecreamProjectile icecream = boss.getIcecreams().get(i);
             if (icecream.getBounds().overlaps(player.getBounds())) {
                 player.takeDamage(icecream.getDamage());
                 boss.getIcecreams().remove(i);
                 audioManager.playSound("shoot");
+                System.out.println("ไอติมโดนผู้เล่นHPลด" + icecream.getDamage());
             }
         }
         if (!boss.isAlive()) {
@@ -124,8 +150,7 @@ public class FirstScreen implements Screen {
 
         font.draw(batch, "WEAPON: " + player.getCurrentWeapon(), 300, 580);
         drawWeaponSelection();
-
-        font.draw(batch, "A/D: Move, SPACE:Attack", 20, 40);
+        font.draw(batch, "A/D: Move, SPACE: Attack", 20, 40);
         font.draw(batch, "1/2: Switch Weapon", 20, 20);
     }
 
@@ -141,7 +166,7 @@ public class FirstScreen implements Screen {
             batch.setColor(Color.WHITE);
         }
 
-        font.draw(batch, "[1]BOOK   [2]GEAR", 300, 550);
+        font.draw(batch, "[1] BOOK   [2] GEAR", 300, 550);
     }
 
     private void drawHealthBar(float x, float y, int currentHealth, int maxHealth, Color color) {
@@ -163,28 +188,96 @@ public class FirstScreen implements Screen {
         batch.setColor(Color.WHITE);
     }
 
-    private void drawGameOver() {
-        font.getData().setScale(1.8f);
+    private void drawVictoryScreen(float delta) {
+        victoryTimer += delta;
 
-        if (gameResult.equals("VICTORY")) {
-            font.setColor(Color.GOLD);
-            font.draw(batch, "VICTORY!", 320, 400);
-            font.setColor(Color.YELLOW);
-            font.draw(batch, "You defeated the elephant boss!", 220, 350);
-        } else {
-            font.setColor(Color.RED);
-            font.draw(batch, "GAME OVER", 320, 400);
-            font.setColor(Color.ORANGE);
-            font.draw(batch, "The elephant was too strong!", 240, 350);
-        }
+        // พื้นหลัง
+        batch.setColor(0, 0, 0, 0.7f);
+        batch.draw(whitePixel, 0, 0, 800, 600);
+        batch.setColor(1, 1, 1, 1);
+        font.getData().setScale(3.0f);
+        batch.setColor(1, 0.9f, 0.2f, 1);
+        font.draw(batch, "VICTORY!", 250, 450);
+        batch.setColor(1, 1, 1, 1);
+        font.getData().setScale(1.8f);
+        batch.setColor(0.2f, 1, 0.2f, 1);
+        font.draw(batch, "YOU DEFEATED THE ELEPHANT BOSS!", 120, 380);
+        batch.setColor(1, 1, 1, 1);
+        font.getData().setScale(1.5f);
+        batch.setColor(1, 1, 0.3f, 1);
+        font.draw(batch, "CONGRATULATIONS!", 240, 320);
+        batch.setColor(1, 1, 1, 1);
+    }
+
+    private void drawGameOver() {
+        batch.setColor(0, 0, 0, 0.7f);
+        batch.draw(whitePixel, 0, 0, 800, 600);
+        batch.setColor(1, 1, 1, 1);
+
+        font.getData().setScale(2.5f);
+        batch.setColor(1, 0.2f, 0.2f, 1);
+        font.draw(batch, "GAME OVER", 280, 450);
+
+        font.getData().setScale(1.5f);
+        batch.setColor(1, 0.6f, 0.2f, 1);
+        font.draw(batch, "The elephant was too strong!", 220, 380);
+
+        font.getData().setScale(1.2f);
+        batch.setColor(1, 1, 1, 1);
+        font.draw(batch, "Better luck next time!", 300, 320);
 
         font.getData().setScale(1.3f);
-        font.setColor(Color.WHITE);
-        font.draw(batch, "Press R to Restart", 300, 250);
+    }
 
-        if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.R)) {
-            restartGame();
-        }
+    private void drawButtons() {
+        boolean tryAgainHover = isButtonHovered(tryAgainButton);
+        batch.setColor(tryAgainHover ? 0.3f : 0.2f, 0.7f, 0.3f, 0.9f);
+        batch.draw(whitePixel, tryAgainButton.x, tryAgainButton.y, tryAgainButton.width, tryAgainButton.height);
+        batch.setColor(0.1f, 0.5f, 0.1f, 1);
+        batch.draw(whitePixel, tryAgainButton.x, tryAgainButton.y, tryAgainButton.width, 3);
+        batch.draw(whitePixel, tryAgainButton.x, tryAgainButton.y + tryAgainButton.height - 3, tryAgainButton.width, 3);
+        batch.draw(whitePixel, tryAgainButton.x, tryAgainButton.y, 3, tryAgainButton.height);
+        batch.draw(whitePixel, tryAgainButton.x + tryAgainButton.width - 3, tryAgainButton.y, 3, tryAgainButton.height);
+
+        font.getData().setScale(1.5f);
+        batch.setColor(1, 1, 1, 1);
+        font.draw(batch, "TRY AGAIN",
+            tryAgainButton.x + 40,
+            tryAgainButton.y + tryAgainButton.height / 2 + 10);
+        boolean quitHover = isButtonHovered(quitButton);
+        batch.setColor(quitHover ? 0.9f : 0.8f, 0.3f, 0.3f, 0.9f);
+        batch.draw(whitePixel, quitButton.x, quitButton.y, quitButton.width, quitButton.height);
+        batch.setColor(0.5f, 0.1f, 0.1f, 1);
+        batch.draw(whitePixel, quitButton.x, quitButton.y, quitButton.width, 3);
+        batch.draw(whitePixel, quitButton.x, quitButton.y + quitButton.height - 3, quitButton.width, 3);
+        batch.draw(whitePixel, quitButton.x, quitButton.y, 3, quitButton.height);
+        batch.draw(whitePixel, quitButton.x + quitButton.width - 3, quitButton.y, 3, quitButton.height);
+
+        batch.setColor(1, 1, 1, 1);
+        font.draw(batch, "QUIT",
+            quitButton.x + 70,
+            quitButton.y + quitButton.height / 2 + 10);
+
+        font.getData().setScale(1.3f);
+        batch.setColor(1, 1, 1, 1);
+    }
+
+    private boolean isButtonHovered(Rectangle button) {
+        camera.unproject(touchPoint.set(Gdx.input.getX(), Gdx.input.getY(), 0));
+        return button.contains(touchPoint.x, touchPoint.y);
+    }
+
+    private void drawStatBox(float x, float y, float width, float height) {
+        batch.setColor(0.1f, 0.1f, 0.1f, 0.9f);
+        batch.draw(whitePixel, x, y, width, height);
+
+        batch.setColor(1, 0.9f, 0.3f, 0.5f);
+        batch.draw(whitePixel, x, y, width, 3);
+        batch.draw(whitePixel, x, y + height - 3, width, 3);
+        batch.draw(whitePixel, x, y, 3, height);
+        batch.draw(whitePixel, x + width - 3, y, 3, height);
+
+        batch.setColor(1, 1, 1, 1);
     }
 
     private void restartGame() {
@@ -193,6 +286,7 @@ public class FirstScreen implements Screen {
         player = new Player(50, 50);
         boss = new ElephantBoss(550, 50);
         gameFinished = false;
+        victoryTimer = 0;
         audioManager.playBGM();
     }
 

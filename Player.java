@@ -29,7 +29,7 @@ public class Player {
         bookTexture = new Texture(Gdx.files.internal("images/book.PNG"));
         try {
             gearTexture = new Texture(Gdx.files.internal("images/gear.PNG"));
-            System.out.println("โหลดเกียร์สำเร็จละ");
+            System.out.println("โหลดเกียร์ละ");
         } catch (Exception e) {
             System.out.println("ไม่พบไฟล์gearใช้ book.PNGแทน"); //ป้องกัน
             gearTexture = bookTexture;
