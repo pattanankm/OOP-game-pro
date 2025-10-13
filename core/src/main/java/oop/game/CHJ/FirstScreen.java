@@ -3,9 +3,12 @@ package oop.game.CHJ;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
@@ -16,30 +19,22 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout; // ✅ เพิ่ม
-import com.badlogic.gdx.audio.Music;              // ✅ เพิ่ม
-
 
 public class FirstScreen implements Screen {
+    private final Main game;
+
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
     private SpriteBatch batch;
 
-    private Texture frontTex;
-    private Texture currentTex;
-    private Texture gearIcon;      // <-- ย้ายมาประกาศไว้
-    private Texture chatIcon;
-    private Texture handIcon;
+    private Texture frontTex, currentTex, gearIcon, chatIcon, handIcon;
+    private Texture[] frontWalk, backWalk, leftWalk, rightWalk, Jump;
 
     private float playerX, playerY;
     private float speed = 160f;
 
-    private final float MIN_X = 800;
-    private final float MAX_X = 3300;
-    private final float MIN_Y = 560;
-    private final float MAX_Y = 2740;
+    private final float MIN_X = 800, MAX_X = 3300, MIN_Y = 560, MAX_Y = 2740;
 
     private Array<Rectangle> collisionRects;
     private Array<NPC> npcs;
@@ -49,24 +44,17 @@ public class FirstScreen implements Screen {
     private int currentFrame = 0;
     private float walkTime = 0f;
     private float frameDuration = 0.2f;
-    private Texture[] frontWalk, backWalk, leftWalk, rightWalk, Jump;
-
     private boolean isJumping = false;
 
     private BitmapFont font;
-    private boolean objectVisible = false;
-    // ✅ เพลงคลอและเสียงเดิน
-    private Music bgmFirst;            // เพลงคลอ FirstScreen.mp3
-    private Music walkMusic;           // เสียงเดิน Walk.mp3
-    private boolean walkingSoundPlaying = false;
-
-    // ✅ สถานะกำลังเดิน (ไว้ใช้วาดชื่อเฉพาะตอนวิ่ง)
-    private boolean isMoving = false;
-
-    // ✅ ใช้จัดกึ่งกลางชื่อ
     private GlyphLayout nameLayout = new GlyphLayout();
+    private boolean objectVisible = false;
 
-    private final Main game;
+    // เพลง
+    private Music bgmFirst;     // Music/StageMusic/FirstScreen.mp3
+    private Music walkMusic;    // Music/Walk/Walk.mp3
+    private boolean walkingSoundPlaying = false;
+    private boolean isMoving = false;  // ใช้ควบคุมแสดงชื่อเฉพาะตอนวิ่ง
 
     public FirstScreen(Main game) { this.game = game; }
 
@@ -83,30 +71,30 @@ public class FirstScreen implements Screen {
 
         chatIcon = new Texture("Icons/Chat_Icon.png");
         handIcon = new Texture("Icons/Hand_Icon.png");
-        gearIcon = new Texture("Icons/gear.PNG"); // <-- โหลดครั้งเดียวที่นี่
+        gearIcon = new Texture("Icons/gear.png"); // ✅ ให้ตรงกับไฟล์จริง
 
         collisionRects = new Array<>();
         npcs = new Array<>();
 
-        // สร้าง NPC
+        // ตัวอย่าง NPC
         NPC penguin = new NPC(2358, 2340, "NPC/Penguin_Stand.png", "Today is very cold~", "Penguin");
         npcs.add(penguin);
         NPC giraffe = new NPC(1400, 1700, "NPC/Giraffe_Stand.png", "We are all Entaneer!", "Giraffe");
         npcs.add(giraffe);
 
-        // อ่าน collision layer
+        // Collision
         MapLayer objectLayer = map.getLayers().get("Collision");
         if (objectLayer != null) {
             for (MapObject obj : objectLayer.getObjects()) {
                 if (obj instanceof RectangleMapObject) {
-                    Rectangle rect = ((RectangleMapObject) obj).getRectangle();
-                    rect.set(rect.x * unitScale, rect.y * unitScale, rect.width * unitScale, rect.height * unitScale);
-                    collisionRects.add(rect);
+                    Rectangle r = ((RectangleMapObject) obj).getRectangle();
+                    r.set(r.x * unitScale, r.y * unitScale, r.width * unitScale, r.height * unitScale);
+                    collisionRects.add(r);
                 }
             }
         }
 
-        // โหลดภาพท่าเดิน
+        // โหลดสปรाइटเดิน
         frontWalk = new Texture[] {
             new Texture("CharMove/Girl_FrontLeft1.png"),
             new Texture("CharMove/Girl_FrontStand.png"),
@@ -126,31 +114,28 @@ public class FirstScreen implements Screen {
             new Texture("CharMove/Girl_LeftStand.png"),
             new Texture("CharMove/Girl_Left1.png")
         };
-        Jump = new Texture[]{ new Texture("CharMove/Girl_Jump.png") };
+        Jump = new Texture[] { new Texture("CharMove/Girl_Jump.png") };
 
         frontTex  = new Texture("CharMove/Girl_Front.png");
         currentTex = frontTex;
 
-        if (bgmFirst == null) {
-            bgmFirst = Gdx.audio.newMusic(Gdx.files.internal("Music/FirstScreen.mp3"));
-            bgmFirst.setLooping(true);
-            bgmFirst.setVolume(0.28f); // คลอเบาๆ
-        }
+        // 🔊 เพลงคลอฉาก
+        bgmFirst = Gdx.audio.newMusic(Gdx.files.internal("Music/StageMusic/FirstScreen.mp3"));
+        bgmFirst.setLooping(true);
+        bgmFirst.setVolume(0.28f);
         bgmFirst.play();
 
-        // ✅ เสียงเดิน (ให้ loop ได้)
-        if (walkMusic == null) {
-            walkMusic = Gdx.audio.newMusic(Gdx.files.internal("Music/Walk/Walk.mp3"));
-            walkMusic.setLooping(true);
-            walkMusic.setVolume(0.55f); // เด่นกว่าบีจีบางนิด
-        }
+        // 👣 เสียงเดิน
+        walkMusic = Gdx.audio.newMusic(Gdx.files.internal("Music/Walk/Walk.mp3"));
+        walkMusic.setLooping(true);
+        walkMusic.setVolume(0.55f);
 
         // จุดเกิด
-        int mapWidth = map.getProperties().get("width", Integer.class);
-        int mapHeight = map.getProperties().get("height", Integer.class);
+        int mapW = map.getProperties().get("width", Integer.class);
+        int mapH = map.getProperties().get("height", Integer.class);
         int tilePixel = map.getProperties().get("tilewidth", Integer.class);
-        playerX = (mapWidth * tilePixel * 0.495f) / 2.5f;
-        playerY = (mapHeight * tilePixel * 0.48f ) / 2.5f;
+        playerX = (mapW * tilePixel * 0.495f) / 2.5f;
+        playerY = (mapH * tilePixel * 0.48f ) / 2.5f;
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
@@ -159,84 +144,55 @@ public class FirstScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput(delta);
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+
+        Gdx.gl.glClearColor(0,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
         renderer.setView(camera);
-
-        // วาดพื้น
         renderer.render(new int[]{2,3,4,5});
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // วาด NPC + ไอคอนคุย
+        // วาด NPC
         for (NPC npc : npcs) {
             batch.draw(npc.texture, npc.x, npc.y, npc.width, npc.height);
             if (npc.isPlayerNear(playerX, playerY, 80f)) {
-                font.draw(batch, npc.dialogue, npc.x, npc.y + npc.height + 20);
-                batch.draw(chatIcon, npc.x + 55 , npc.y + 60, 24, 24);
+                // แสดงไอคอนคุย
+                batch.draw(chatIcon, npc.x + 55, npc.y + 60, 24, 24);
             }
         }
 
-        // เควส 1: เข้า Library
-        Rectangle triggerArea = new Rectangle(2200, 2400, 100, 100);
-        Rectangle playerRect  = new Rectangle(playerX, playerY, 100, 150);
-        if (game.questManager.isQuest1Started()) {
-            if (playerRect.overlaps(triggerArea)) {
-                font.draw(batch, "Tap to get inside!", 2240, 2440);
-                if (Gdx.input.justTouched()) {
-                    game.setScreen(new LibraryScreen(game));
-                }
-            }
-        }
-
-        // เควส 2: มือ/เฟือง
-        Rectangle handRect = new Rectangle(1600, 800, 50, 50);
-        if (game.questManager.isQuest2Started()) {
-            batch.draw(handIcon, handRect.x, handRect.y, handRect.width, handRect.height);
-            font.draw(batch, "loob!", handRect.x, handRect.y + handRect.height + 20);
-        }
-
-        if (Gdx.input.justTouched()) {
-            com.badlogic.gdx.math.Vector3 click = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(click);
-            if (handRect.contains(click.x, click.y)) {
-                objectVisible = true;
-            }
-        }
-
-        if (objectVisible) {
-            batch.draw(gearIcon, 1650, 860, 40, 40); // <-- ใช้ gearIcon ที่โหลดใน show()
-        }
+        // วาดวัตถุ (ตัวอย่าง icon เฟือง)
+        if (objectVisible) batch.draw(gearIcon, 1650, 860, 40, 40);
 
         // วาดตัวละคร
         float tileSize = 10f;
-        batch.draw(currentTex, playerX, playerY,
-            currentTex.getWidth() / tileSize,
-            currentTex.getHeight() / tileSize
-        );
+        float drawW = currentTex.getWidth() / tileSize;
+        float drawH = currentTex.getHeight() / tileSize;
+        batch.draw(currentTex, playerX, playerY, drawW, drawH);
+
+        // ชื่อผู้เล่น “เฉพาะตอนกำลังวิ่ง”
+        if (isMoving && game.playerName != null && !game.playerName.isEmpty()) {
+            nameLayout.setText(font, game.playerName);
+            float nameX = playerX + (drawW - nameLayout.width) / 2f;
+            float nameY = playerY - 10f;
+
+            // เงาดำบาง ๆ
+            font.setColor(0,0,0,0.85f);
+            font.draw(batch, game.playerName, nameX + 1, nameY - 1);
+            font.draw(batch, game.playerName, nameX - 1, nameY + 1);
+
+            // ตัวอักษรขาว
+            font.setColor(1,1,1,1);
+            font.draw(batch, game.playerName, nameX, nameY);
+        }
 
         batch.end();
 
-        // วาดเลเยอร์บนสุด
+        // เลเยอร์บนสุด (หลังคา/ต้นไม้ชั้นบน)
         renderer.render(new int[]{6});
-
-        // คลิก chat icon
-        if (Gdx.input.justTouched()) {
-            com.badlogic.gdx.math.Vector3 click = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(click);
-            for (NPC npc : npcs) {
-                if (npc.isPlayerNear(playerX, playerY, 80f)) {
-                    Rectangle chatRect = new Rectangle(npc.x + 55, npc.y + 60, 24, 24);
-                    if (chatRect.contains(click.x, click.y)) {
-                        game.setScreen(new DialogueScreen(game, npc));
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     private Texture[] previousWalkFrames = null;
@@ -254,37 +210,32 @@ public class FirstScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && !isJumping) {
             isJumping = true;
             currentTex = Jump[0];
-            com.badlogic.gdx.utils.Timer.schedule(new Timer.Task() {
+            Timer.schedule(new Timer.Task() {
                 @Override public void run() {
                     isJumping = false;
-                    if (!(Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.DOWN) ||
-                        Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT))) {
+                    if (!(Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+                        || Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.RIGHT))) {
                         currentTex = frontTex;
                     }
                 }
             }, 0.3f);
         }
 
-        for (NPC npc : npcs) {
-            if (npc.isPlayerNear(playerX, playerY, 80f) && Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                game.setScreen(new DialogueScreen(game, npc));
-            }
-        }
-
+        // แอนิเมชันเดิน
         if (walkFrames != previousWalkFrames) { currentFrame = 0; walkTime = 0f; previousWalkFrames = walkFrames; }
-
         if (moving && walkFrames != null && !isJumping) {
             walkTime += delta;
-            if (walkTime >= frameDuration) { walkTime = 0f; currentFrame++; if (currentFrame >= walkFrames.length) currentFrame = 0; }
+            if (walkTime >= frameDuration) { walkTime = 0f; currentFrame = (currentFrame + 1) % walkFrames.length; }
             currentTex = walkFrames[currentFrame];
         } else {
             currentFrame = 0;
         }
 
-        float playerWidth  = currentTex.getWidth() / 10f * 1f;
+        // ชนสิ่งกีดขวาง
+        float playerWidth  = currentTex.getWidth() / 10f;
         float playerHeight = currentTex.getHeight() / 10f * 0.4f;
         float offsetX = (currentTex.getWidth() / 10f - playerWidth) / 2f;
-        float offsetY = 0;
+        float offsetY = 0f;
 
         Rectangle rectX = new Rectangle(nextX + offsetX, playerY + offsetY, playerWidth, playerHeight);
         boolean collidedX = false;
@@ -296,6 +247,7 @@ public class FirstScreen implements Screen {
         for (Rectangle r : collisionRects) { if (rectY.overlaps(r)) { collidedY = true; break; } }
         if (!collidedY) playerY = nextY;
 
+        // ขอบแผนที่
         if (playerX < MIN_X) playerX = MIN_X;
         if (playerY < MIN_Y) playerY = MIN_Y;
         if (playerX > MAX_X) playerX = MAX_X;
@@ -303,6 +255,19 @@ public class FirstScreen implements Screen {
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
+
+        // อัปเดตสถานะ “กำลังเดิน” และควบคุมเสียงเดิน
+        isMoving = moving && !isJumping;
+        updateWalkingSound(isMoving);
+    }
+
+    private void updateWalkingSound(boolean shouldPlay) {
+        if (walkMusic == null) return;
+        if (shouldPlay) {
+            if (!walkingSoundPlaying) { walkMusic.play(); walkingSoundPlaying = true; }
+        } else {
+            if (walkingSoundPlaying) { walkMusic.stop(); walkingSoundPlaying = false; }
+        }
     }
 
     @Override
@@ -312,9 +277,10 @@ public class FirstScreen implements Screen {
         camera.update();
     }
 
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override public void pause()  { if (bgmFirst != null && bgmFirst.isPlaying()) bgmFirst.pause(); if (walkMusic != null && walkMusic.isPlaying()) walkMusic.pause(); }
+    @Override public void resume() { if (bgmFirst != null && !bgmFirst.isPlaying()) bgmFirst.play(); }
+
+    @Override public void hide()   { if (bgmFirst != null) bgmFirst.stop(); if (walkMusic != null) walkMusic.stop(); }
 
     @Override
     public void dispose() {
@@ -326,9 +292,11 @@ public class FirstScreen implements Screen {
         if (handIcon != null) handIcon.dispose();
         if (gearIcon != null) gearIcon.dispose();
 
-        if (npcs != null) for (NPC npc : npcs) npc.dispose();
         disposeArray(frontWalk); disposeArray(backWalk); disposeArray(leftWalk);
         disposeArray(rightWalk); disposeArray(Jump);
+
+        if (bgmFirst != null) bgmFirst.dispose();
+        if (walkMusic != null) walkMusic.dispose();
     }
 
     private void disposeArray(Texture[] arr) {

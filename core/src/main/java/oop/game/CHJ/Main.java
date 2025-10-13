@@ -21,7 +21,6 @@ public class Main extends Game {
     public String selectedGender = "";
     public Texture pixel;
 
-
     @Override
     public void create() {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
@@ -29,40 +28,36 @@ public class Main extends Game {
         pixmap.fill();
         pixel = new Texture(pixmap);
         pixmap.dispose();
+
         batch = new SpriteBatch();
-        // use libGDX's default font
         font = new BitmapFont();
         viewport = new FitViewport(8, 5);
-
-        //font has 15pt, but we need to scale it to our viewport by ratio of viewport height to screen height
         font.setUseIntegerPositions(false);
         font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
 
-        this.setScreen(new MainMenuScreen(this));
-
-
         questManager = new QuestManager();
 
-        // สร้างหน้าจอที่ต้องใช้
+        // ✅ สร้างหน้าจอที่ต้องใช้
         mainMenuScreen = new MainMenuScreen(this);
         firstScreen    = new FirstScreen(this);
 
-        // เริ่มที่เมนูหลัก
+        // ✅ เริ่มที่เมนูหลัก
         setScreen(mainMenuScreen);
     }
 
-//    public Texture pixel;
-
+    @Override
     public void render() {
-        super.render(); // important!
+        super.render();
     }
 
+    @Override
     public void dispose() {
         batch.dispose();
         font.dispose();
+        if (pixel != null) pixel.dispose();
     }
 
-    /** เรียกตอนเงื่อนไขสำเร็จจาก MainMenuScreen */
+    /** เรียกตอนเริ่มเกม */
     public void goToFirstScreen() {
         if (firstScreen == null) firstScreen = new FirstScreen(this);
         setScreen(firstScreen);
