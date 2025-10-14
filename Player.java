@@ -171,3 +171,5 @@ public class Player {
         public int getDamage() { return damage; }
     }
 }
+ 
+// End of Player.java

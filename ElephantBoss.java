@@ -319,3 +319,5 @@ public class ElephantBoss {
         public int getDamage() { return damage; }
     }
 }
+
+// End of ElephantBoss.java
