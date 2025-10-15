@@ -2,7 +2,7 @@ package com.mygdx.game.lwjgl3;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.mygdx.game.Main;
+import oop.game.CHJ.Main;
 
 public class Lwjgl3Launcher {
     public static void main(String[] args) {

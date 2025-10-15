@@ -56,7 +56,7 @@ configure(subprojects) {
 
 subprojects {
   version = "$projectVersion"
-  ext.appName = 'MyAdventureGame'
+  ext.appName = 'CMU-Hero-Journey'
   repositories {
     mavenCentral()
 //    maven { url 'https://s01.oss.sonatype.org' }
@@ -69,4 +69,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'MyAdventureGame' + '-parent'
+eclipse.project.name = 'CMU-Hero-Journey' + '-parent'
