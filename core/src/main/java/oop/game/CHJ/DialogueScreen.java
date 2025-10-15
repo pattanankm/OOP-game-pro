@@ -246,7 +246,7 @@ public class DialogueScreen implements Screen {
 
         public Gear(float x, float y) {
             try {
-                texture = new Texture(Gdx.files.internal("images/gear.PNG"));
+                texture = new Texture(Gdx.files.internal("Icons/gear.PNG"));
                 position = new Vector2(x, y);
                 rotation = 0;
                 scale = 1.0f;

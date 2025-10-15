@@ -2,6 +2,11 @@
 BG/Chat_BB.png
 BG/FoE_BG.png
 BG/Lib_BG.png
+Botton/BeginBT.png
+Botton/ExitBT.png
+Botton/HomeBT.png
+Botton/ResumeBT.png
+Botton/SaveBT.png
 CharMove/Girl_Back.png
 CharMove/Girl_Front.png
 CharMove/Girl_FrontLeft1.png
@@ -33,6 +38,7 @@ LibMap/Lib_Map.tsx
 LibMap/Lib_MapCold.png
 LibMap/Lib_MapCold.tsx
 LibMap/One.png
+LibMap/PauseMenu.java
 LibMap/normalOne.png
 Map/46CMU_el.tsx
 Map/56CMU_el.tsx
