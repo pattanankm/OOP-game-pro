@@ -77,3 +77,16 @@ NPC/Giraffe_Stand.png
 NPC/Penguin_Stand.png
 NPC/Penguin_Stand.tsx
 assets 2.txt
+audio/Hero.mp3
+audio/Lose.mp3
+audio/Shoot.mp3
+audio/Win.mp3
+images/background.PNG
+images/book.PNG
+images/elephant.PNG
+images/elephant2.PNG
+images/elephantbasic.PNG
+images/elephantbasic2.PNG
+images/gear.PNG
+images/icecream.PNG
+images/player.PNG
