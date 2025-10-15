@@ -2,12 +2,15 @@
 BG/Chat_BB.png
 BG/FoE_BG.png
 BG/Lib_BG.png
+<<<<<<< Updated upstream
 BG/samchang.png
 Botton/BeginBT.png
 Botton/ExitBT.png
 Botton/HomeBT.png
 Botton/ResumeBT.png
 Botton/SaveBT.png
+=======
+>>>>>>> Stashed changes
 CharMove/Girl_Back.png
 CharMove/Girl_Front.png
 CharMove/Girl_FrontLeft1.png
@@ -39,7 +42,10 @@ LibMap/Lib_Map.tsx
 LibMap/Lib_MapCold.png
 LibMap/Lib_MapCold.tsx
 LibMap/One.png
+<<<<<<< Updated upstream
 LibMap/PauseMenu.java
+=======
+>>>>>>> Stashed changes
 LibMap/normalOne.png
 Map/46CMU_el.tsx
 Map/56CMU_el.tsx
@@ -71,6 +77,7 @@ Map/bulding.tsx
 Map/library.tsx
 Map/tree.png
 Map/tree.tsx
+<<<<<<< Updated upstream
 Menu/character.png
 Menu/female.png
 Menu/male.png
@@ -112,3 +119,8 @@ audio/Hero.mp3
 audio/Lose.mp3
 audio/Shoot.mp3
 audio/Win.mp3
+=======
+NPC/Giraffe_Stand.png
+NPC/Penguin_Stand.png
+NPC/Penguin_Stand.tsx
+>>>>>>> Stashed changes
