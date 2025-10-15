@@ -12,14 +12,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector3;
 
-public class FirstScreen implements Screen {
+public class ShootScreen implements Screen {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Texture background;
     private BitmapFont font;
 
     private DialogueState.Player player;
-    private oop.game.CHJ.ElephantBoss.ElephantBoss boss;
+    private ElephantBoss boss;
     private DialogueScreen.AudioManager audioManager;
 
     private boolean gameFinished = false;
@@ -30,7 +30,7 @@ public class FirstScreen implements Screen {
     private Rectangle quitButton;
     private Vector3 touchPoint;
 
-    public FirstScreen() {
+    public ShootScreen() {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
         batch = new SpriteBatch();
@@ -38,13 +38,13 @@ public class FirstScreen implements Screen {
         font.getData().setScale(1.3f);
         font.setColor(Color.WHITE);
 
-        background = new Texture(Gdx.files.internal("images/background.PNG"));
+        background = new Texture(Gdx.files.internal("ShootAsset/background.PNG"));
         audioManager = new DialogueScreen.AudioManager();
 
         whitePixel = createWhitePixel();
 
         player = new DialogueState.Player(50, 50);
-        boss = new oop.game.CHJ.ElephantBoss.ElephantBoss(550, 50);
+        boss = new ElephantBoss(550, 50);
         tryAgainButton = new Rectangle(300, 150, 200, 60);
         quitButton = new Rectangle(300, 70, 200, 60);
         touchPoint = new Vector3();
@@ -118,12 +118,12 @@ public class FirstScreen implements Screen {
             }
         }
         for (int i = boss.getIcecreams().size() - 1; i >= 0; i--) {
-            oop.game.CHJ.ElephantBoss.ElephantBoss.IcecreamProjectile icecream = boss.getIcecreams().get(i);
+            ElephantBoss.IcecreamProjectile icecream = boss.getIcecreams().get(i);
             if (icecream.getBounds().overlaps(player.getBounds())) {
                 player.takeDamage(icecream.getDamage());
                 boss.getIcecreams().remove(i);
                 audioManager.playSound("shoot");
-                System.out.println("ไอติมโดนผู้เล่นHPลด" + icecream.getDamage());
+                System.out.println("Be aware of ICE-Cream!!" + icecream.getDamage());
             }
         }
         if (!boss.isAlive()) {
@@ -284,7 +284,7 @@ public class FirstScreen implements Screen {
         player.dispose();
         boss.dispose();
         player = new DialogueState.Player(50, 50);
-        boss = new ElephantBoss.ElephantBoss(550, 50);
+        boss = new ElephantBoss(550, 50);
         gameFinished = false;
         victoryTimer = 0;
         audioManager.playBGM();

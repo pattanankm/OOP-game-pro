@@ -79,6 +79,17 @@ public class FirstScreen implements Screen {
     private final Rectangle gearZone  = new Rectangle(2250, 2380, 400, 400);
     private final Rectangle bookZone  = new Rectangle(2330, 2380, 400, 400);
 
+    // === Elephant shrine trigger ===
+    private Rectangle elephantShrineZone;   // จะโหลดจากชั้น "Triggers" ชื่อวัตถุ "ElephantShrine"
+    private float shrineIdleTimer = 0f;     // เวลาที่ผู้เล่นหยุดนิ่งในโซน
+    private final float shrineIdleToEnter = 0.8f; // หยุด 0.8 วินาทีแล้วเข้า ShootScreen
+
+    // ใช้ bounds เดียวกับที่ชนฉาก
+    private final Rectangle playerBounds = new Rectangle();
+    private float lastX = Float.NaN, lastY = Float.NaN;
+    private final float idleEpsilon = 0.5f; // ผู้เล่นขยับน้อยกว่า 0.5 หน่วยถือว่า “นิ่ง”
+
+
 
     public FirstScreen(Main game) {
         this.game = game;
@@ -184,6 +195,24 @@ public class FirstScreen implements Screen {
         // margin 16px, ช่อง 48px, ระยะห่าง 8px
         inventory = new InventoryUI(16f, 16f, 48f, 8f);
 
+        elephantShrineZone = null;
+        MapLayer triggers = map.getLayers().get("Triggers");
+        if (triggers != null) {
+            for (MapObject obj : triggers.getObjects()) {
+                if (obj instanceof RectangleMapObject && "ElephantShrine".equals(obj.getName())) {
+                    Rectangle r = ((RectangleMapObject) obj).getRectangle();
+                    elephantShrineZone = new Rectangle(
+                            r.x * unitScale, r.y * unitScale,
+                            r.width * unitScale, r.height * unitScale
+                    );
+                    break;
+                }
+            }
+        }
+// ประมาณศาลจ๊ะอยู่ที่ (1680, 900) ขนาด (220, 160)
+        if (elephantShrineZone == null) {
+            elephantShrineZone = new Rectangle(1680, 900, 220, 160);
+        }
 }
 
     @Override
@@ -419,6 +448,27 @@ public class FirstScreen implements Screen {
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
+
+        // ตรวจว่าผู้เล่นอยู่ในโซนศาลช้างและหยุดนิ่ง
+        Rectangle playerRectForTrigger = new Rectangle(playerX, playerY, 100, 150);
+        boolean inShrine = playerRectForTrigger.overlaps(elephantShrineZone);
+
+        if (inShrine && !moving) {
+            shrineIdleTimer += delta;
+            if (shrineIdleTimer >= shrineIdleToEnter) {
+                goToShootScreen();   // → เปลี่ยนฉาก
+                return;              // หยุดทำงานต่อในเฟรมนี้
+            }
+        } else {
+            shrineIdleTimer = 0f;
+        }
+
+    }
+
+    private void goToShootScreen() {
+        if (backgroundMusic != null) backgroundMusic.stop();
+        if (walkSound != null) walkSound.stop();
+        game.setScreen(new ShootScreen()); // ใช้คอนสตรัคเตอร์แบบที่คุณให้มา
     }
 
     @Override

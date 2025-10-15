@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class ElephantBoss {
-    public static class ElephantBoss {
+ public class ElephantBoss {
         private Texture basicTexture1;
         private Texture basicTexture2;
         private Texture angryTexture1;
@@ -40,19 +39,19 @@ public class ElephantBoss {
 
         public ElephantBoss(float startX, float startY) {
             try {
-                basicTexture1 = new Texture(Gdx.files.internal("images/elephantbasic.PNG"));
-                basicTexture2 = new Texture(Gdx.files.internal("images/elephantbasic2.PNG"));
-                angryTexture1 = new Texture(Gdx.files.internal("images/elephant.PNG"));
-                angryTexture2 = new Texture(Gdx.files.internal("images/elephant2.PNG"));
-                icecreamTexture = new Texture(Gdx.files.internal("images/icecream.PNG"));
+                basicTexture1 = new Texture(Gdx.files.internal("ShootAsset/elephantbasic.PNG"));
+                basicTexture2 = new Texture(Gdx.files.internal("ShootAsset/elephantbasic2.PNG"));
+                angryTexture1 = new Texture(Gdx.files.internal("ShootAsset/elephant.PNG"));
+                angryTexture2 = new Texture(Gdx.files.internal("ShootAsset/elephant2.PNG"));
+                icecreamTexture = new Texture(Gdx.files.internal("ShootAsset/icecream.PNG"));
                 System.out.println("โหลดช้าง");
             } catch (Exception e) {
                 System.out.println("ช้างไม่สำเร็จ" + e.getMessage());
-                basicTexture1 = new Texture(Gdx.files.internal("images/player.PNG"));
+                basicTexture1 = new Texture(Gdx.files.internal("ShootAsset/player.PNG"));
                 basicTexture2 = basicTexture1;
                 angryTexture1 = basicTexture1;
                 angryTexture2 = basicTexture1;
-                icecreamTexture = new Texture(Gdx.files.internal("images/book.PNG"));
+                icecreamTexture = new Texture(Gdx.files.internal("ShootAsset/book.PNG"));
             }
             icecreams = new ArrayList<>();
             x = startX;
@@ -321,4 +320,4 @@ public class ElephantBoss {
             public int getDamage() { return damage; }
         }
     }
-}
+
