@@ -2,6 +2,11 @@
 BG/Chat_BB.png
 BG/FoE_BG.png
 BG/Lib_BG.png
+Botton/BeginBT.png
+Botton/ExitBT.png
+Botton/HomeBT.png
+Botton/SaveBT.png
+Botton/StartBT.png
 CharMove/Girl_Back.png
 CharMove/Girl_Front.png
 CharMove/Girl_FrontLeft1.png
