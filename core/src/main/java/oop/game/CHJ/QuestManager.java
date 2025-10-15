@@ -2,6 +2,21 @@ package oop.game.CHJ;
 
 public class QuestManager {
 
+    // Quest1 = ไปคุยยีราฟ, Quest2 = ลูบมือ
+    private boolean quest1Started = false, quest1Completed = false;
+    private boolean quest2Started = false, quest2Completed = false;
+
+    public void startQuest1() { quest1Started = true; onTalkGiraffe(); }
+    public void completeQuest1() { quest1Completed = true; onTalkGiraffe(); }
+
+    public void startQuest2() { quest2Started = true; onTouchHand(); }
+    public void completeQuest2() { quest2Completed = true; onTouchHand(); }
+
+    public boolean isQuest1Started() { return quest1Started || questStep >= 1; }
+    public boolean isQuest1Completed() { return quest1Completed || questStep >= 1; }
+    public boolean isQuest2Started() { return quest2Started || questStep >= 2; }
+    public boolean isQuest2Completed() { return quest2Completed || questStep >= 2; }
+
     // ค่ากลาง: 0 เริ่มเกม, 1 คุยยีราฟ, 2 ลูบมือ, 3 เก็บเกียร์, 4 ไปห้องสมุด, 5 ปิดแอร์แล้ว (ไปขอพร)
     private int questStep;
     private boolean gearCollected;
@@ -72,18 +87,18 @@ public class QuestManager {
     }
 
     // ---------- เมธอดเดิมเพื่อความเข้ากันได้ (mapping) ----------
-    // Quest1 = ไปคุยยีราฟ, Quest2 = ลูบมือ
-    private boolean quest1Started = false, quest1Completed = false;
-    private boolean quest2Started = false, quest2Completed = false;
-
-    public void startQuest1() { quest1Started = true; onTalkGiraffe(); }
-    public void completeQuest1() { quest1Completed = true; onTalkGiraffe(); }
-
-    public void startQuest2() { quest2Started = true; onTouchHand(); }
-    public void completeQuest2() { quest2Completed = true; onTouchHand(); }
-
-    public boolean isQuest1Started() { return quest1Started || questStep >= 1; }
-    public boolean isQuest1Completed() { return quest1Completed || questStep >= 1; }
-    public boolean isQuest2Started() { return quest2Started || questStep >= 2; }
-    public boolean isQuest2Completed() { return quest2Completed || questStep >= 2; }
+//    // Quest1 = ไปคุยยีราฟ, Quest2 = ลูบมือ
+//    private boolean quest1Started = false, quest1Completed = false;
+//    private boolean quest2Started = false, quest2Completed = false;
+//
+//    public void startQuest1() { quest1Started = true; onTalkGiraffe(); }
+//    public void completeQuest1() { quest1Completed = true; onTalkGiraffe(); }
+//
+//    public void startQuest2() { quest2Started = true; onTouchHand(); }
+//    public void completeQuest2() { quest2Completed = true; onTouchHand(); }
+//
+//    public boolean isQuest1Started() { return quest1Started || questStep >= 1; }
+//    public boolean isQuest1Completed() { return quest1Completed || questStep >= 1; }
+//    public boolean isQuest2Started() { return quest2Started || questStep >= 2; }
+//    public boolean isQuest2Completed() { return quest2Completed || questStep >= 2; }
 }

@@ -18,7 +18,7 @@ public class HintTextUI {
     private String currentHint = "";
     private float showTimer = 0f;
     private float fadeDuration = 0.5f;  // เวลา fade in/out
-    private float displayDuration = 4f; // เวลาแสดงข้อความ
+    private float displayDuration = 8f; // เวลาแสดงข้อความ
     private float alpha = 0f;
 
     public HintTextUI() {

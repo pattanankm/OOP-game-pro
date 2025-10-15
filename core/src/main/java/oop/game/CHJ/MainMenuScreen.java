@@ -166,6 +166,11 @@ public class MainMenuScreen implements Screen {
                 if (!playerName.isEmpty() && !selectedGender.isEmpty()) {
                     game.playerName = playerName;
                     game.selectedGender = selectedGender;
+
+                    SaveManager.clearAll();
+
+                    game.questManager = new QuestManager();
+
                     if (menuMusic != null) menuMusic.stop();
                     game.setScreen(new FirstScreen(game));
                     dispose();

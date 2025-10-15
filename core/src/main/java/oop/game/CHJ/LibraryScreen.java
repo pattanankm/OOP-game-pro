@@ -87,9 +87,11 @@ public class LibraryScreen implements Screen {
         // สร้าง camera และ viewport แค่ครั้งเดียว
         camera = new OrthographicCamera();
         camera.setToOrtho(false,
-            Gdx.graphics.getWidth() * unitScale,
-            Gdx.graphics.getHeight() * unitScale
+            Gdx.graphics.getWidth() * unitScale *2.5f,
+            Gdx.graphics.getHeight() * unitScale *2.5f
         );
+
+        camera = new OrthographicCamera();
         camera.update();
         renderer = new OrthogonalTiledMapRenderer(map, unitScale);
 

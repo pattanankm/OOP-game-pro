@@ -137,6 +137,10 @@ public class FirstScreen implements Screen {
         npcs.add(penguin);
         NPC giraffe = new NPC(1400, 1700, "NPC/Giraffe_Stand.png", "We are all Entaneer!", "Giraffe");
         npcs.add(giraffe);
+        NPC elephant = new NPC(3000, 1700, "NPC/elephant_Stand.PNG", "Welcome to Elephant Shrine!", "Elephant");
+        elephant.width = 100;  // ความกว้าง (ค่าเดิมประมาณ 100)
+        elephant.height = 130; // ความสูง (ค่าเดิมประมาณ 150)
+        npcs.add(elephant);
 
         MapLayer objectLayer = map.getLayers().get("Collision");
         if (objectLayer != null) {
@@ -175,19 +179,21 @@ public class FirstScreen implements Screen {
         currentTex = frontTex;
         batch = new SpriteBatch();
 
-        // โหลดตำแหน่งจากเซฟ หรือใช้ตำแหน่งเริ่มต้น
-        if (SaveManager.hasSave()) {
-            SaveManager.SaveState s = SaveManager.load();
-            playerX = s.x;
-            playerY = s.y;
-            // ตรวจสอบว่ามีเควสไหนเสร็จแล้วบ้าง
-            if (s.gear) objectVisible = true;
-        } else {
-            float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
-            float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
-            playerX = spawnX;
-            playerY = spawnY;
-        }
+        float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
+        float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
+        playerX = spawnX;
+        playerY = spawnY;
+//
+//        // โหลดตำแหน่งจากเซฟ หรือใช้ตำแหน่งเริ่มต้น
+//        if (SaveManager.hasSave()) {
+//            SaveManager.SaveState s = SaveManager.load();
+//            playerX = s.x;
+//            playerY = s.y;
+//            // ตรวจสอบว่ามีเควสไหนเสร็จแล้วบ้าง
+//            if (s.gear) objectVisible = true;
+//        } else {
+//
+//        }
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
@@ -245,7 +251,7 @@ public class FirstScreen implements Screen {
             hintTextUI.showHint("i need to find a gear around here");
             hasShownGearHint = true;
         } else if (step == 3 && !hasShownLibraryHint) {
-            hintTextUI.showHint("I should go to the library to find a book");
+            hintTextUI.showHint("I should go to the library to close the air-con and find a book");
             hasShownLibraryHint = true;
         } else if (step == 5 && !hasShownShrineHint) {
             hintTextUI.showHint("Maybe i should make a wish at the elephant shrine");
@@ -302,6 +308,9 @@ public class FirstScreen implements Screen {
         if (game.questManager.isQuest1Started()) {
             if (playerRect.overlaps(triggerArea)) {
                 font.draw(batch, "Tap to get inside!", 2240, 2440);
+                if (Gdx.input.justTouched()){
+                    game.setScreen(new LibraryScreen(game));
+                }
             }
         }
 
@@ -312,8 +321,19 @@ public class FirstScreen implements Screen {
             font.draw(batch, "Touch!", handRect.x, handRect.y + handRect.height + 20);
         }
 
+        // ตรวจคลิก
+        if (Gdx.input.justTouched()) {
+            com.badlogic.gdx.math.Vector3 click = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(click); // แปลงจาก screen -> world
+
+            if (handRect.contains(click.x, click.y)) {
+                objectVisible = true; // ให้ object ใหม่โผล่
+            }
+        }
+
         float gearIconX = 1650;
         float gearIconY = 860;
+
         if (objectVisible) {
             batch.draw(gearIcon, gearIconX, gearIconY, 40, 40);
         }
@@ -581,7 +601,9 @@ public class FirstScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        camera.setToOrtho(false, width * unitScale, height * unitScale);
+
+        camera.setToOrtho(false, width * unitScale * 2.5f,   // ← เพิ่ม * 2.5f
+            height * unitScale * 2.5f);
         camera.position.set(playerX, playerY, 0);
         camera.update();
 

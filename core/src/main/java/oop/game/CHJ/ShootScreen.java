@@ -72,55 +72,62 @@ public class ShootScreen implements Screen {
 
     @Override
     public void render(float delta) {
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        // ----- WORLD LAYER -----
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
-        batch.begin();
-        batch.draw(background, 0, 0, 800, 600);
+        try {
+            batch.begin(); // รอบที่ 1: วาดฉาก/ตัวละคร/เกมเพลย์
+            batch.draw(background, 0, 0, 800, 600);
 
-        if (!gameFinished) {
-            boss.render(batch);
-            player.render(batch);
-            drawUI();
-        } else {
-            if (gameResult.equals("VICTORY")) {
-                drawVictoryScreen(delta);
+            if (!gameFinished) {
+                boss.render(batch);     // ❗ เมธอดพวกนี้ห้ามมี begin/end ข้างใน
+                player.render(batch);
+                drawUI();               // ถ้า drawUI() วาด "in-game UI" ด้วย SpriteBatch เช่นหลอดเลือด
+                // ให้แน่ใจว่าไม่มี begin/end อยู่ในนั้น
             } else {
-                drawGameOver();
+                if ("VICTORY".equals(gameResult)) {
+                    drawVictoryScreen(delta); // ❗ ไม่มี begin/end ภายใน
+                } else {
+                    drawGameOver();           // ❗ ไม่มี begin/end ภายใน
+                }
+                drawButtons();                // ❗ ไม่มี begin/end ภายใน
             }
-            drawButtons();
+        } finally {
+            if (batch.isDrawing()) batch.end();
         }
 
-        // วาด HUD โดยใช้ uiCamera
+        // ----- HUD LAYER (จอทับ, ใช้กล้อง UI) -----
         batch.setProjectionMatrix(uiCamera.combined);
-        batch.begin();
-        topLeftHUD.render(batch);
-        batch.end();
+        try {
+            batch.begin(); // รอบที่ 2: วาด HUD
+            topLeftHUD.render(batch);  // ❗ ห้าม begin/end ภายใน
+        } finally {
+            if (batch.isDrawing()) batch.end();
+        }
 
-// คลิกปุ่ม
+        // ----- INPUT / LOGIC หลังจากจบการวาดแต่ละรอบ -----
         switch (topLeftHUD.updateAndHandleInput(uiCamera)) {
             case SAVE:
                 saveShootState();
                 break;
             case HOME:
-                // หยุดเพลง/เสียง แล้วกลับเมนู
                 audioManager.stopBGM();
                 game.setScreen(new MainMenuScreen(game));
-                return;
-            default: break;
+                return; // ตรงนี้โอเค เพราะเราปิด batch ไปแล้ว
+            default:
+                break;
         }
-
-        batch.end();
 
         if (!gameFinished) {
             updateGame(delta);
         } else {
             handleInput();
         }
-
     }
 
     private void handleInput() {

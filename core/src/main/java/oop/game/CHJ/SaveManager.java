@@ -56,4 +56,11 @@ public class SaveManager {
     public static void markAirOff(){
         SaveState s = load(); s.airOff = true; s.questStep = Math.max(s.questStep, 5); save(s);
     }
+
+
+    public static void clearAll() {
+        Preferences p = Gdx.app.getPreferences(SaveManager.PREF);
+        p.clear();
+        p.flush();
+    }
 }
