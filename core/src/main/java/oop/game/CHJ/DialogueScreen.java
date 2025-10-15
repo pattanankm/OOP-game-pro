@@ -55,27 +55,34 @@ public class DialogueScreen implements Screen {
         chatBox = new Texture("BG/Chat_BB.png");
 
         switch (npc.name) {
-            case "Penguin":
-                bg = new Texture("BG/Lib_BG.png");
-                npcImage = new Texture("NPC/Penguin_Stand.png");
-                states = new DialogueState[]{
-                    new DialogueState("Brrr... It's cold today!", new Texture("NPC/Penguin_Stand.png"), 200, 120),
-                    new DialogueState("Wanna fish with me?", new Texture("NPC/Giraffe_Stand.png"), 250, 250),
-                    new DialogueState("Be careful, the ice is slippery!", new Texture("NPC/Penguin_Stand.png"), 220, 120)
-                };
-                game.questManager.startQuest1(); //เริ่มเควส 1 หลังคุยเพนกวิน
-                break;
-
             case "Giraffe":
                 bg = new Texture("BG/FoE_BG.png");
-                npcImage = new Texture("NPC/Giraffe_Stand.png");
                 states = new DialogueState[]{
-                    new DialogueState("Brrr... It's cold today!", new Texture("NPC/Penguin_Stand.png"), 200, 120),
-                    new DialogueState("Wanna fish with me?", new Texture("NPC/Giraffe_Stand.png"), 250, 120),
-                    new DialogueState("Be careful, the ice is slippery!", new Texture("NPC/Penguin_Stand.png"), 220, 120)
+                    new DialogueState("Giraffe: Hello! Welcome to the Engineering Faculty!", new Texture("NPC/Giraffe_Stand.png"), 200, 120),
+                    new DialogueState("Student: Hi! This place looks amazing!", new Texture("NPC/Student1.png"), 800, 120),
+                    new DialogueState("Giraffe: That's right! Here, we have the 'Gear' as our symbol.", new Texture("NPC/Giraffe1.png"), 200, 120),
+                    new DialogueState("Student: The Gear? What does it represent?", new Texture("NPC/Student2.png"), 800, 120),
+                    new DialogueState("Giraffe: It represents engineering spirit and teamwork!", new Texture("NPC/Giraffe2.png"), 200, 120),
+                    new DialogueState("Student: That sounds inspiring!", new Texture("NPC/Student3.png"), 800, 120),
+                    new DialogueState("Giraffe: If you're ready, let me show you around!", new Texture("NPC/Giraffe3.png"), 200, 120),
+                    new DialogueState("Student: I'd love that! Let's go!", new Texture("NPC/Student4.png"), 800, 120)
                 };
-                game.questManager.startQuest2(); //เริ่มเควส 2 หลังคุยยีราฟ
+                game.questManager.startQuest1();
                 break;
+
+            case "Penguin":
+                bg = new Texture("BG/Lib_BG.png");
+                states = new DialogueState[]{
+                    new DialogueState("Penguin: Brrr… It's so cold today!", new Texture("NPC/Penguin_Stand.png"), 200, 120),
+                    new DialogueState("Student: You're right! It's freezing.", new Texture("NPC/Student1.png"), 800, 120),
+                    new DialogueState("Penguin: Exactly! Please turn off the AC, I'm freezing!", new Texture("NPC/Penguin1 (2).png"), 200, 120),
+                    new DialogueState("Student: Okay, I'll go turn it off.", new Texture("NPC/Student2.png"), 800, 120),
+                    new DialogueState("Penguin: Thank you! I can finally warm up.", new Texture("NPC/Penguin2.png"), 200, 120),
+                };
+                game.questManager.startQuest2();
+                break;
+
+
         }
     }
 
