@@ -38,10 +38,10 @@ public class DialogueState {
         private boolean isMoving = false;
 
         public Player(float startX, float startY) {
-            playerTexture = new Texture(Gdx.files.internal("images/player.PNG"));
-            bookTexture = new Texture(Gdx.files.internal("images/book.PNG"));
+            playerTexture = new Texture(Gdx.files.internal("CharMove/Girl_Front.png"));
+            bookTexture = new Texture(Gdx.files.internal("Icons/book.PNG"));
             try {
-                gearTexture = new Texture(Gdx.files.internal("images/gear.PNG"));
+                gearTexture = new Texture(Gdx.files.internal("Icons/gear.PNG"));
                 System.out.println("โหลดเกียร์ละ");
             } catch (Exception e) {
                 System.out.println("ไม่พบไฟล์gearใช้ book.PNGแทน"); //ป้องกัน
