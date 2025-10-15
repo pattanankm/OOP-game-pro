@@ -110,7 +110,7 @@ public class MainMenuScreen implements Screen {
         game.batch.draw(backgroundTexture, 0, 0, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
         game.font.setColor(Color.BLACK);
         String displayName = playerName + ((isInputActive && (int)(cursorBlinkTime * 2) % 2 == 0) ? "|" : "");
-        game.font.draw(game.batch, displayName, nameInputBox.x + 0.3f, nameInputBox.y + nameInputBox.height / 2 + 0.15f);
+        game.font.draw(game.batch, displayName, nameInputBox.x + 0.5f, nameInputBox.y + nameInputBox.height / 2 + 0.08f);
 
         game.batch.draw(characterButtonTexture, characterButton.x, characterButton.y, characterButton.width, characterButton.height);
         game.batch.draw(startButtonTexture, startButton.x, startButton.y, startButton.width, startButton.height);
@@ -137,10 +137,10 @@ public class MainMenuScreen implements Screen {
                 layout.setText(game.font, playerName);
                 float pad = 0.15f;
                 float boxX = selectedCharacterDisplay.x + (selectedCharacterDisplay.width - layout.width) / 2 - pad;
-                float boxY = selectedCharacterDisplay.y - 0.45f;
-                float boxW = layout.width + pad * 2, boxH = layout.height + pad * 2;
-                game.batch.setColor(0, 0, 0, 0.5f);
-                game.batch.draw(game.pixel, boxX, boxY - layout.height, boxW, boxH);
+                float boxY = selectedCharacterDisplay.y;
+//                float boxW = layout.width + pad * 2, boxH = layout.height + pad * 2;
+//                game.batch.setColor(0, 0, 0, 0.5f);
+//                game.batch.draw(game.pixel, boxX, boxY - layout.height, boxW, boxH);
                 game.batch.setColor(Color.WHITE);
                 drawOutlinedText(playerName, boxX + pad, boxY, Color.WHITE, Color.BLACK);
             }
