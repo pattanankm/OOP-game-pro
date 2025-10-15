@@ -13,7 +13,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector3;
 
 public class ShootScreen implements Screen {
+    private final Main game;
     private OrthographicCamera camera;
+    private OrthographicCamera uiCamera;
     private SpriteBatch batch;
     private Texture background;
     private BitmapFont font;
@@ -29,14 +31,21 @@ public class ShootScreen implements Screen {
     private Rectangle tryAgainButton;
     private Rectangle quitButton;
     private Vector3 touchPoint;
+    private TopLeftHUD topLeftHUD;
 
-    public ShootScreen() {
+    public ShootScreen(Main game) {
+        this.game = game;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 600);
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, 800, 600);
+
         batch = new SpriteBatch();
         font = new BitmapFont();
         font.getData().setScale(1.3f);
         font.setColor(Color.WHITE);
+
+        topLeftHUD = new TopLeftHUD("Botton/SaveBT.png", "Botton/HomeBT.png");
 
         background = new Texture(Gdx.files.internal("ShootAsset/background.PNG"));
         audioManager = new DialogueScreen.AudioManager();
@@ -85,6 +94,25 @@ public class ShootScreen implements Screen {
             drawButtons();
         }
 
+        // วาด HUD โดยใช้ uiCamera
+        batch.setProjectionMatrix(uiCamera.combined);
+        batch.begin();
+        topLeftHUD.render(batch);
+        batch.end();
+
+// คลิกปุ่ม
+        switch (topLeftHUD.updateAndHandleInput(uiCamera)) {
+            case SAVE:
+                saveShootState();
+                break;
+            case HOME:
+                // หยุดเพลง/เสียง แล้วกลับเมนู
+                audioManager.stopBGM();
+                game.setScreen(new MainMenuScreen(game));
+                return;
+            default: break;
+        }
+
         batch.end();
 
         if (!gameFinished) {
@@ -92,6 +120,7 @@ public class ShootScreen implements Screen {
         } else {
             handleInput();
         }
+
     }
 
     private void handleInput() {
@@ -105,6 +134,12 @@ public class ShootScreen implements Screen {
             }
         }
     }
+
+    private void saveShootState() {
+        Gdx.app.log("SAVE", "Saving ShootScreen state...");
+        // TODO: เซฟ HP ผู้เล่น/บอส อื่น ๆ ตามต้องการ
+    }
+
 
     private void updateGame(float delta) {
         player.update(delta);
@@ -293,6 +328,10 @@ public class ShootScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         camera.setToOrtho(false, 800, 600);
+        camera.setToOrtho(false, 800, 600);
+        uiCamera.setToOrtho(false, 800, 600);
+        if (topLeftHUD != null) topLeftHUD.onResize(width, height);
+
     }
 
     @Override public void show() {}
@@ -309,5 +348,6 @@ public class ShootScreen implements Screen {
         audioManager.dispose();
         player.dispose();
         boss.dispose();
+        if (topLeftHUD != null) topLeftHUD.dispose();
     }
 }

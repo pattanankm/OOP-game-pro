@@ -22,19 +22,12 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-
-// ⭐ แก้ไขหลัก:
-// 1. เพิ่ม GlyphLayout สำหรับวาดชื่อผู้เล่น
-// 2. เพิ่มตัวแปร Music และ Sound
-// 3. ย้าย gearIcon ไป show()
-// 4. รวมการตรวจสอบ justTouched() เป็นครั้งเดียว
-// 5. เพิ่มเสียงเดินที่ loop/stop ตามการเคลื่อนไหว
 
 public class FirstScreen implements Screen {
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
+    private OrthographicCamera uiCamera;
     private SpriteBatch batch;
     private Texture frontTex;
     private Texture currentTex;
@@ -66,30 +59,31 @@ public class FirstScreen implements Screen {
     private Texture gearIcon;
     private boolean objectVisible = false;
 
-    // เสียง
     private Music backgroundMusic;
     private Sound walkSound;
     private boolean wasMoving = false;
 
     private final Main game;
-    private OrthographicCamera uiCamera;     // กล้องสำหรับ HUD/จอ
-    private InventoryUI inventory;           // มุมซ้ายล่าง
+    private InventoryUI inventory;
+    private TopLeftHUD topLeftHUD;
+    private HintTextUI hintTextUI;
+    private PauseMenu pauseMenu;
 
-    // โซนที่ยืนแล้วกด E เพื่อเก็บของ (พิกัดโลก ปรับได้ตามแผนที่จริง)
-    private final Rectangle gearZone  = new Rectangle(2250, 2380, 400, 400);
-    private final Rectangle bookZone  = new Rectangle(2330, 2380, 400, 400);
+    private final Rectangle gearZone = new Rectangle(2250, 2380, 400, 400);
+    private final Rectangle bookZone = new Rectangle(2330, 2380, 400, 400);
 
-    // === Elephant shrine trigger ===
-    private Rectangle elephantShrineZone;   // จะโหลดจากชั้น "Triggers" ชื่อวัตถุ "ElephantShrine"
-    private float shrineIdleTimer = 0f;     // เวลาที่ผู้เล่นหยุดนิ่งในโซน
-    private final float shrineIdleToEnter = 0.8f; // หยุด 0.8 วินาทีแล้วเข้า ShootScreen
+    private Rectangle elephantShrineZone;
+    private float shrineIdleTimer = 0f;
+    private final float shrineIdleToEnter = 0.8f;
 
-    // ใช้ bounds เดียวกับที่ชนฉาก
-    private final Rectangle playerBounds = new Rectangle();
-    private float lastX = Float.NaN, lastY = Float.NaN;
-    private final float idleEpsilon = 0.5f; // ผู้เล่นขยับน้อยกว่า 0.5 หน่วยถือว่า “นิ่ง”
+    private Texture[] previousWalkFrames = null;
 
-
+    // ตัวแปรสำหรับติดตามว่าเคยแสดงข้อความไปแล้วหรือยัง
+    private boolean hasShownStartHint = false;
+    private boolean hasShownGiraffeAreaHint = false;
+    private boolean hasShownGearHint = false;
+    private boolean hasShownLibraryHint = false;
+    private boolean hasShownShrineHint = false;
 
     public FirstScreen(Main game) {
         this.game = game;
@@ -134,7 +128,9 @@ public class FirstScreen implements Screen {
             Gdx.graphics.getWidth() * unitScale,
             Gdx.graphics.getHeight() * unitScale
         );
-        camera.update();
+
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // สร้าง NPC
         NPC penguin = new NPC(2358, 2340, "NPC/Penguin_Stand.png", "Today is very cold~", "Penguin");
@@ -179,22 +175,31 @@ public class FirstScreen implements Screen {
         currentTex = frontTex;
         batch = new SpriteBatch();
 
-        float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
-        float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
-        playerX = spawnX;
-        playerY = spawnY;
+        // โหลดตำแหน่งจากเซฟ หรือใช้ตำแหน่งเริ่มต้น
+        if (SaveManager.hasSave()) {
+            SaveManager.SaveState s = SaveManager.load();
+            playerX = s.x;
+            playerY = s.y;
+            // ตรวจสอบว่ามีเควสไหนเสร็จแล้วบ้าง
+            if (s.gear) objectVisible = true;
+        } else {
+            float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
+            float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
+            playerX = spawnX;
+            playerY = spawnY;
+        }
 
         camera.position.set(playerX, playerY, 0);
         camera.update();
-
-        uiCamera = new OrthographicCamera();
-        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         uiCamera.update();
 
-        // === NEW: อินเวนทอรีมุมซ้ายล่างของ “จอ” ===
-        // margin 16px, ช่อง 48px, ระยะห่าง 8px
+        // สร้าง UI components
+        topLeftHUD = new TopLeftHUD("Botton/SaveBT.png", "Botton/HomeBT.png");
         inventory = new InventoryUI(16f, 16f, 48f, 8f);
+        hintTextUI = new HintTextUI();
+        pauseMenu = new PauseMenu();
 
+        // โหลด elephant shrine zone
         elephantShrineZone = null;
         MapLayer triggers = map.getLayers().get("Triggers");
         if (triggers != null) {
@@ -202,43 +207,88 @@ public class FirstScreen implements Screen {
                 if (obj instanceof RectangleMapObject && "ElephantShrine".equals(obj.getName())) {
                     Rectangle r = ((RectangleMapObject) obj).getRectangle();
                     elephantShrineZone = new Rectangle(
-                            r.x * unitScale, r.y * unitScale,
-                            r.width * unitScale, r.height * unitScale
+                        r.x * unitScale, r.y * unitScale,
+                        r.width * unitScale, r.height * unitScale
                     );
                     break;
                 }
             }
         }
-// ประมาณศาลจ๊ะอยู่ที่ (1680, 900) ขนาด (220, 160)
         if (elephantShrineZone == null) {
             elephantShrineZone = new Rectangle(1680, 900, 220, 160);
         }
-}
+
+        // แสดงข้อความเริ่มต้น
+        showContextualHint();
+    }
+
+    private void saveGame() {
+        game.questManager.updatePlayerPosition("FirstScreen", playerX, playerY);
+        SaveManager.SaveState s = SaveManager.load();
+        s.x = playerX;
+        s.y = playerY;
+        s.screen = "FirstScreen";
+        SaveManager.save(s);
+        Gdx.app.log("SAVE", "Game saved at (" + playerX + ", " + playerY + ")");
+    }
+
+    private void showContextualHint() {
+        int step = game.questManager.getQuestStep();
+
+        if (step == 0 && !hasShownStartHint) {
+            hintTextUI.showHint("Where is this place?, i need to look around");
+            hasShownStartHint = true;
+        } else if (step == 0 && isNearGiraffe() && !hasShownGiraffeAreaHint) {
+            hintTextUI.showHint("Who is that giraffe?, maybe i should go talk to her");
+            hasShownGiraffeAreaHint = true;
+        } else if (step == 2 && !hasShownGearHint) {
+            hintTextUI.showHint("i need to find a gear around here");
+            hasShownGearHint = true;
+        } else if (step == 3 && !hasShownLibraryHint) {
+            hintTextUI.showHint("I should go to the library to find a book");
+            hasShownLibraryHint = true;
+        } else if (step == 5 && !hasShownShrineHint) {
+            hintTextUI.showHint("Maybe i should make a wish at the elephant shrine");
+            hasShownShrineHint = true;
+        }
+    }
+
+    private boolean isNearGiraffe() {
+        for (NPC npc : npcs) {
+            if (npc.name.equals("Giraffe") && npc.isPlayerNear(playerX, playerY, 200f)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public void render(float delta) {
+        // ถ้า pause menu เปิดอยู่ ไม่ให้เกมทำงาน
+        if (pauseMenu.isVisible()) {
+            renderPauseMenu();
+            return;
+        }
+
         handleInput(delta);
+        hintTextUI.update(delta);
+        showContextualHint();
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
         renderer.setView(camera);
-
         renderer.render(new int[]{2,3,4,5});
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-
         // วาด NPC
         for (NPC npc : npcs) {
             batch.draw(npc.texture, npc.x, npc.y, npc.width, npc.height);
 
-            float distance = (float) Math.sqrt(Math.pow(playerX - npc.x, 2) + Math.pow(playerY - npc.y, 2));
-
             if (npc.isPlayerNear(playerX, playerY, 80f)) {
-                // ข้อความ NPC เป็นสีขาว
                 font.setColor(Color.WHITE);
                 font.draw(batch, npc.dialogue, npc.x, npc.y + npc.height + 20);
                 batch.draw(chatIcon, npc.x + 55, npc.y + 60, 24, 24);
@@ -259,7 +309,7 @@ public class FirstScreen implements Screen {
         Rectangle handRect = new Rectangle(1600, 800, 50, 50);
         if (game.questManager.isQuest2Started()) {
             batch.draw(handIcon, handRect.x, handRect.y, handRect.width, handRect.height);
-            font.draw(batch, "loob!", handRect.x, handRect.y + handRect.height + 20);
+            font.draw(batch, "Touch!", handRect.x, handRect.y + handRect.height + 20);
         }
 
         float gearIconX = 1650;
@@ -281,12 +331,10 @@ public class FirstScreen implements Screen {
             float nameX = playerX + (currentTex.getWidth() / tileSize - nameLayout.width) / 2;
             float nameY = playerY - 10;
 
-            // พื้นหลังสีดำโปร่งใส
             batch.setColor(0, 0, 0, 0.6f);
             batch.draw(game.pixel, nameX - 5, nameY - nameLayout.height - 2, nameLayout.width + 10, nameLayout.height + 6);
             batch.setColor(Color.WHITE);
 
-            // วาดข้อความสีขาวพร้อมเงาสีดำ
             font.setColor(Color.BLACK);
             font.draw(batch, game.playerName, nameX + 1, nameY - 1);
             font.setColor(Color.WHITE);
@@ -297,40 +345,92 @@ public class FirstScreen implements Screen {
 
         renderer.render(new int[]{6});
 
+        // วาด UI
         batch.setProjectionMatrix(uiCamera.combined);
         batch.begin();
-        inventory.render(batch);   // เงาเทา = ยังไม่เก็บ, สีจริง = เก็บแล้ว
+        topLeftHUD.render(batch);
+        inventory.render(batch);
+        hintTextUI.render(batch, uiCamera.viewportWidth, uiCamera.viewportHeight);
         batch.end();
 
-        // ตรวจสอบการคลิก (รวมเป็นครั้งเดียว)
+        // เช็คปุ่ม HUD
+        TopLeftHUD.Clicked action = topLeftHUD.updateAndHandleInput(uiCamera);
+        if (action == TopLeftHUD.Clicked.SAVE) {
+            saveGame();
+            hintTextUI.showHint("Game is already recoded!");
+        } else if (action == TopLeftHUD.Clicked.HOME) {
+            pauseMenu.show();
+        }
+
+        // ตรวจสอบการคลิก
         if (Gdx.input.justTouched()) {
             Vector3 click = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             camera.unproject(click);
 
-            // คลิก handRect
             if (game.questManager.isQuest2Started() && handRect.contains(click.x, click.y)) {
                 objectVisible = true;
+                game.questManager.onTouchHand();
             }
 
-            // คลิก chat icon
             for (NPC npc : npcs) {
                 if (npc.isPlayerNear(playerX, playerY, 80f)) {
                     Rectangle chatRect = new Rectangle(npc.x + 55, npc.y + 60, 24, 24);
                     if (chatRect.contains(click.x, click.y)) {
+                        if (npc.name.equals("Giraffe")) {
+                            game.questManager.onTalkGiraffe();
+                        }
                         game.setScreen(new DialogueScreen(game, npc));
                         return;
                     }
                 }
             }
 
-            // คลิก trigger area
             if (game.questManager.isQuest1Started() && playerRect.overlaps(triggerArea)) {
                 game.setScreen(new LibraryScreen(game));
             }
         }
     }
 
-    private Texture[] previousWalkFrames = null;
+    private void renderPauseMenu() {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        camera.update();
+        renderer.setView(camera);
+        renderer.render();
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        // วาดตัวละครและ NPC (แช่แข็ง)
+        for (NPC npc : npcs) {
+            batch.draw(npc.texture, npc.x, npc.y, npc.width, npc.height);
+        }
+        float tileSize = 10f;
+        batch.draw(currentTex, playerX, playerY,
+            currentTex.getWidth() / tileSize,
+            currentTex.getHeight() / tileSize);
+        batch.end();
+
+        // วาด Pause Menu
+        batch.setProjectionMatrix(uiCamera.combined);
+        batch.begin();
+        pauseMenu.render(batch, uiCamera);
+        batch.end();
+
+        // ตรวจสอบการคลิกปุ่ม
+        PauseMenu.Action menuAction = pauseMenu.checkInput(uiCamera);
+        if (menuAction == PauseMenu.Action.BEGIN) {
+            pauseMenu.hide();
+            if (backgroundMusic != null) backgroundMusic.stop();
+            if (walkSound != null) walkSound.stop();
+            game.setScreen(new MainMenuScreen(game));
+        } else if (menuAction == PauseMenu.Action.RESUME) {
+            pauseMenu.hide();
+        } else if (menuAction == PauseMenu.Action.EXIT) {
+            Gdx.app.exit();
+        }
+    }
 
     private void handleInput(float delta) {
         float nextX = playerX;
@@ -387,6 +487,9 @@ public class FirstScreen implements Screen {
         for (NPC npc : npcs) {
             if (npc.isPlayerNear(playerX, playerY, 80f)) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                    if (npc.name.equals("Giraffe")) {
+                        game.questManager.onTalkGiraffe();
+                    }
                     game.setScreen(new DialogueScreen(game, npc));
                 }
             }
@@ -410,10 +513,16 @@ public class FirstScreen implements Screen {
             currentFrame = 0;
         }
 
-        Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150); // ใช้กล่องเดิมที่คุณคำนวณอยู่ก็ได้
+        Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-            if (playerRect.overlaps(gearZone)) inventory.collectItem("gear");
-            if (playerRect.overlaps(bookZone)) inventory.collectItem("book");
+            if (playerRect.overlaps(gearZone) && inventory.collectItem("gear")) {
+                game.questManager.onCollectItem("gear");
+                hintTextUI.showHint("Collected the gear!");
+            }
+            if (playerRect.overlaps(bookZone) && inventory.collectItem("book")) {
+                game.questManager.onCollectItem("book");
+                hintTextUI.showHint("Collected the book!");
+            }
         }
 
         float playerWidth = currentTex.getWidth() / 10f;
@@ -449,34 +558,38 @@ public class FirstScreen implements Screen {
         camera.position.set(playerX, playerY, 0);
         camera.update();
 
-        // ตรวจว่าผู้เล่นอยู่ในโซนศาลช้างและหยุดนิ่ง
+        // ตรวจศาลช้าง
         Rectangle playerRectForTrigger = new Rectangle(playerX, playerY, 100, 150);
         boolean inShrine = playerRectForTrigger.overlaps(elephantShrineZone);
 
         if (inShrine && !moving) {
             shrineIdleTimer += delta;
             if (shrineIdleTimer >= shrineIdleToEnter) {
-                goToShootScreen();   // → เปลี่ยนฉาก
-                return;              // หยุดทำงานต่อในเฟรมนี้
+                goToShootScreen();
+                return;
             }
         } else {
             shrineIdleTimer = 0f;
         }
-
     }
 
     private void goToShootScreen() {
         if (backgroundMusic != null) backgroundMusic.stop();
         if (walkSound != null) walkSound.stop();
-        game.setScreen(new ShootScreen()); // ใช้คอนสตรัคเตอร์แบบที่คุณให้มา
+        game.setScreen(new ShootScreen(game));
     }
 
     @Override
     public void resize(int width, int height) {
-        float unitScale = 1f;
         camera.setToOrtho(false, width * unitScale, height * unitScale);
         camera.position.set(playerX, playerY, 0);
         camera.update();
+
+        uiCamera.setToOrtho(false, width, height);
+        uiCamera.update();
+
+        if (topLeftHUD != null) topLeftHUD.onResize(width, height);
+        if (pauseMenu != null) pauseMenu.onResize(width, height);
     }
 
     @Override
@@ -507,6 +620,10 @@ public class FirstScreen implements Screen {
 
         if (backgroundMusic != null) backgroundMusic.dispose();
         if (walkSound != null) walkSound.dispose();
+        if (topLeftHUD != null) topLeftHUD.dispose();
+        if (hintTextUI != null) hintTextUI.dispose();
+        if (pauseMenu != null) pauseMenu.dispose();
+        if (inventory != null) inventory.dispose();
 
         for (Texture[] frames : new Texture[][]{frontWalk, backWalk, leftWalk, rightWalk, Jump}) {
             for (Texture t : frames) t.dispose();
