@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package oop.game.CHJ;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -18,9 +18,9 @@ public class FirstScreen implements Screen {
     private Texture background;
     private BitmapFont font;
 
-    private Player player;
-    private ElephantBoss boss;
-    private AudioManager audioManager;
+    private DialogueState.Player player;
+    private oop.game.CHJ.ElephantBoss.ElephantBoss boss;
+    private DialogueScreen.AudioManager audioManager;
 
     private boolean gameFinished = false;
     private String gameResult = "";
@@ -39,12 +39,12 @@ public class FirstScreen implements Screen {
         font.setColor(Color.WHITE);
 
         background = new Texture(Gdx.files.internal("images/background.PNG"));
-        audioManager = new AudioManager();
+        audioManager = new DialogueScreen.AudioManager();
 
         whitePixel = createWhitePixel();
 
-        player = new Player(50, 50);
-        boss = new ElephantBoss(550, 50);
+        player = new DialogueState.Player(50, 50);
+        boss = new oop.game.CHJ.ElephantBoss.ElephantBoss(550, 50);
         tryAgainButton = new Rectangle(300, 150, 200, 60);
         quitButton = new Rectangle(300, 70, 200, 60);
         touchPoint = new Vector3();
@@ -110,7 +110,7 @@ public class FirstScreen implements Screen {
         player.update(delta);
         boss.update(delta, player.getBounds().x, player.getBounds().y);
         for (int i = player.getProjectiles().size() - 1; i >= 0; i--) {
-            Player.Projectile projectile = player.getProjectiles().get(i);
+            DialogueState.Player.Projectile projectile = player.getProjectiles().get(i);
             if (projectile.getBounds().overlaps(boss.getBounds())) {
                 boss.takeDamage(projectile.getDamage());
                 player.getProjectiles().remove(i);
@@ -118,7 +118,7 @@ public class FirstScreen implements Screen {
             }
         }
         for (int i = boss.getIcecreams().size() - 1; i >= 0; i--) {
-            ElephantBoss.IcecreamProjectile icecream = boss.getIcecreams().get(i);
+            oop.game.CHJ.ElephantBoss.ElephantBoss.IcecreamProjectile icecream = boss.getIcecreams().get(i);
             if (icecream.getBounds().overlaps(player.getBounds())) {
                 player.takeDamage(icecream.getDamage());
                 boss.getIcecreams().remove(i);
@@ -283,8 +283,8 @@ public class FirstScreen implements Screen {
     private void restartGame() {
         player.dispose();
         boss.dispose();
-        player = new Player(50, 50);
-        boss = new ElephantBoss(550, 50);
+        player = new DialogueState.Player(50, 50);
+        boss = new ElephantBoss.ElephantBoss(550, 50);
         gameFinished = false;
         victoryTimer = 0;
         audioManager.playBGM();

@@ -2,14 +2,19 @@ package oop.game.CHJ;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.HashMap;
 
 public class DialogueScreen implements Screen {
     private final Main game;
@@ -173,5 +178,102 @@ public class DialogueScreen implements Screen {
         if (npcImage != null) npcImage.dispose();
         font.dispose();
         chatBox.dispose();
+    }
+
+    public static class AudioManager {
+        private HashMap<String, Sound> sounds;
+        private Music bgm;
+
+        public AudioManager() {
+            sounds = new HashMap<>();
+            loadSounds();
+        }
+
+        private void loadSounds() {
+            try {
+                sounds.put("shoot", Gdx.audio.newSound(Gdx.files.internal("audio/Shoot.mp3")));
+                sounds.put("win", Gdx.audio.newSound(Gdx.files.internal("audio/Win.mp3")));
+                sounds.put("lose", Gdx.audio.newSound(Gdx.files.internal("audio/Lose.mp3")));
+                bgm = Gdx.audio.newMusic(Gdx.files.internal("audio/Hero.mp3"));
+            } catch (Exception e) {
+                System.out.println("Audio files not found, continuing without audio");
+            }
+        }
+
+        public void playSound(String soundName) {
+            if (sounds.containsKey(soundName)) {
+                sounds.get(soundName).play(0.7f);
+            }
+        }
+
+        public void playBGM() {
+            if (bgm != null) {
+                bgm.setLooping(true);
+                bgm.setVolume(0.3f);
+                bgm.play();
+            }
+        }
+
+        public void stopBGM() {
+            if (bgm != null) {
+                bgm.stop();
+            }
+        }
+
+        public void dispose() {
+            for (Sound sound : sounds.values()) {
+                sound.dispose();
+            }
+            if (bgm != null) {
+                bgm.dispose();
+            }
+        }
+    }
+
+    public static class Gear {
+        private Texture texture;
+        private Vector2 position;
+        private float rotation;
+        private float scale;
+        private float rotationSpeed;
+
+        public Gear(float x, float y) {
+            try {
+                texture = new Texture(Gdx.files.internal("images/gear.PNG"));
+                position = new Vector2(x, y);
+                rotation = 0;
+                scale = 1.0f;
+                rotationSpeed = 30 + (float)Math.random() * 60;
+            } catch (Exception e) {
+                Gdx.app.error("Gear", "Cannot load gear texture: " + e.getMessage());
+            }
+        }
+
+        public void update(float delta) {
+            rotation += delta * rotationSpeed;
+            scale = 0.8f + (float)Math.sin(Gdx.graphics.getFrameId() * 0.05f + position.x) * 0.3f;
+        }
+
+        public void render(SpriteBatch batch) {
+            if (texture == null) return;
+
+            float width = texture.getWidth();
+            float height = texture.getHeight();
+
+            batch.draw(texture,
+                position.x - width/2, position.y - height/2,
+                width/2, height/2,
+                width, height,
+                scale, scale,
+                rotation,
+                0, 0,
+                texture.getWidth(), texture.getHeight(),
+                false, false
+            );
+        }
+
+        public void dispose() {
+            if (texture != null) texture.dispose();
+        }
     }
 }
