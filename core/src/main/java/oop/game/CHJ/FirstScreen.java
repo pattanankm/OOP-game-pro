@@ -139,8 +139,13 @@ public class FirstScreen implements Screen {
         // สร้าง NPC
         NPC penguin = new NPC(2358, 2340, "NPC/Penguin_Stand.png", "Today is very cold~", "Penguin");
         npcs.add(penguin);
-        NPC giraffe = new NPC(1400, 1700, "NPC/Giraffe_Stand.png", "We are all Entaneer!", "Giraffe");
+        NPC giraffe = new NPC(1400, 1720, "NPC/Giraffe_Stand.png", "We are all Entaneer!", "Giraffe");
         npcs.add(giraffe);
+        // เพิ่มช้างใหม่
+        NPC elephant = new NPC(3000, 1700, "NPC/elephant_Stand.PNG", "Welcome to Elephant Shrine!", "Elephant");
+        elephant.width = 100;  // ความกว้าง (ค่าเดิมประมาณ 100)
+        elephant.height = 130; // ความสูง (ค่าเดิมประมาณ 150)
+        npcs.add(elephant);
 
         MapLayer objectLayer = map.getLayers().get("Collision");
         if (objectLayer != null) {

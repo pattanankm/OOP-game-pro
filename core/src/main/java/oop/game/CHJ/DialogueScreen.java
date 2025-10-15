@@ -73,15 +73,28 @@ public class DialogueScreen implements Screen {
             case "Penguin":
                 bg = new Texture("BG/Lib_BG.png");
                 states = new DialogueState[]{
-                    new DialogueState("Penguin: Brrr… It's so cold today!", new Texture("NPC/Penguin_Stand.png"), 200, 120),
+                    new DialogueState("Penguin: Brrrr It's so cold today!", new Texture("NPC/Penguin_Stand.png"), 200, 120),
                     new DialogueState("Student: You're right! It's freezing.", new Texture("NPC/Student1.png"), 800, 120),
-                    new DialogueState("Penguin: Exactly! Please turn off the AC, I'm freezing!", new Texture("NPC/Penguin1 (2).png"), 200, 120),
+                    new DialogueState("Penguin: Exactly! Please turn off the AC, I'm freezing!", new Texture("NPC/Penguin3.png"), 200, 120),
                     new DialogueState("Student: Okay, I'll go turn it off.", new Texture("NPC/Student2.png"), 800, 120),
-                    new DialogueState("Penguin: Thank you! I can finally warm up.", new Texture("NPC/Penguin2.png"), 200, 120),
                 };
                 game.questManager.startQuest2();
                 break;
 
+            case "Elephant":
+                bg = new Texture("BG/samchang.png");
+                states = new DialogueState[]{
+                    new DialogueState("Elephant: Welcome to the Elephant Shrine!", new Texture("NPC/elephant_Stand.PNG"), 200, 120),
+                    new DialogueState("Student: Wow! This is the famous Elephant Shrine!", new Texture("NPC/Student1.png"), 800, 120),
+                    new DialogueState("Elephant: Yes, this shrine has a long history.", new Texture("NPC/elephant2.PNG"), 200, 120),
+                    new DialogueState("Student: I heard it's very sacred here.", new Texture("NPC/Student2.png"), 800, 120),
+                    new DialogueState("Elephant: Students often come here to make wishes about their studies.", new Texture("NPC/elephant3.PNG"), 200, 120),
+                    new DialogueState("Student: Really? Do the wishes come true?", new Texture("NPC/Student3.png"), 800, 120),
+                    new DialogueState("Elephant: Absolutely! Everyone who makes wishes passes their exams.", new Texture("NPC/elephant4.PNG"), 200, 120),
+                    new DialogueState("Student: Then I should make a wish too!", new Texture("NPC/Student4.png"), 800, 120),
+                    new DialogueState("Elephant: Great! You can start making your wish now. Good luck!", new Texture("NPC/elephant_Stand.PNG"), 200, 120)
+                };
+                break;
 
         }
     }
@@ -126,9 +139,16 @@ public class DialogueScreen implements Screen {
 
         // 🔹 วาดข้อความปัจจุบัน
         DialogueState current = states[dialogueIndex];
-        batch.draw(current.image, current.x, current.y,
-            current.image.getWidth()/2,
-            current.image.getHeight()/2);
+        // ตรวจสอบว่าเป็นภาพช้างหรือไม่
+        if (current.text.startsWith("Elephant:")) {
+            // วาดช้างขนาดใหญ่ 400x400
+            batch.draw(current.image, current.x, current.y, 400, 400);
+        } else {
+            // วาด NPC อื่นขนาดปกติ
+            batch.draw(current.image, current.x, current.y,
+                current.image.getWidth()/2,
+                current.image.getHeight()/2);
+        }
         batch.draw(chatBox, chatBoxX, chatBoxY, chatBoxWidth, chatBoxHeight);
         font.draw(batch, current.text, 80, 150);
 

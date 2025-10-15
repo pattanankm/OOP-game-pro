@@ -2,6 +2,7 @@
 BG/Chat_BB.png
 BG/FoE_BG.png
 BG/Lib_BG.png
+BG/samchang.png
 CharMove/Girl_Back.png
 CharMove/Girl_Front.png
 CharMove/Girl_FrontLeft1.png
@@ -86,6 +87,10 @@ NPC/Student1.png
 NPC/Student2.png
 NPC/Student3.png
 NPC/Student4.png
+NPC/elephant2.PNG
+NPC/elephant3.PNG
+NPC/elephant4.PNG
+NPC/elephant_Stand.PNG
 ShootAsset/background.PNG
 ShootAsset/book.PNG
 ShootAsset/elephant.PNG
