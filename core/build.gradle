@@ -1,0 +1,6 @@
+// ===== core/build.gradle =====
+def gdxVersion = '1.12.1'
+
+dependencies {
+  implementation "com.badlogicgames.gdx:gdx:${gdxVersion}"
+}
