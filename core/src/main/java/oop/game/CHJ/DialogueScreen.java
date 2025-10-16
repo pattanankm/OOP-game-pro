@@ -56,7 +56,7 @@ public class DialogueScreen implements Screen {
 
         switch (npc.name) {
 
-            case "elephant":
+            case "Elephant":
                 bg = new Texture("BG/samchang.png");
                 states = new DialogueState[]{
                     new DialogueState("Elephant: Welcome to the Elephant Shrine!", new Texture("NPC/elephant_Stand.PNG"), 200, 120),
@@ -82,7 +82,7 @@ public class DialogueScreen implements Screen {
                     new DialogueState("Penguin: Exactly! Please turn off the AC, I'm freezing!", new Texture("NPC/Penguin3.png"), 200, 120),
                     new DialogueState("Student: Okay, I'll go turn it off.", new Texture("NPC/Student2.png"), 800, 120),
                 };
-                game.questManager.isQuest1Started(); //เริ่มเควส 1 หลังคุยเพนกวิน
+                game.questManager.startQuest1(); //เริ่มเควส 1 หลังคุยเพนกวิน
                 break;
 
 
@@ -98,7 +98,7 @@ public class DialogueScreen implements Screen {
                     new DialogueState("Giraffe: If you're ready, let me show you around!", new Texture("NPC/Giraffe3.png"), 200, 120),
                     new DialogueState("Student: I'd love that! Let's go!", new Texture("NPC/Student4.png"), 800, 120)
                 };
-                game.questManager.isQuest2Started(); //เริ่มเควส 2 หลังคุยยีราฟ
+                game.questManager.startQuest2(); //เริ่มเควส 2 หลังคุยยีราฟ
                 break;
         }
     }

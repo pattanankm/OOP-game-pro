@@ -26,6 +26,7 @@ public class MakeAWish implements Screen {
 
     private static final float WORLD_WIDTH = 1280;
     private static final float WORLD_HEIGHT = 720;
+    private boolean transitioning = false;
 
     // ระบบเลือกพร
     private Rectangle[] wishButtons = new Rectangle[3];
@@ -73,7 +74,7 @@ public class MakeAWish implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // วาดพื้นหลังแบบเต็มจอ
+        // วาดพื้นหลังเต็มจอ
         float viewportWidth = viewport.getWorldWidth();
         float viewportHeight = viewport.getWorldHeight();
         float bgRatio = (float) bg.getWidth() / bg.getHeight();
@@ -100,7 +101,7 @@ public class MakeAWish implements Screen {
 
         // หัวข้อ
         font.getData().setScale(2.5f);
-        font.draw(batch, "MAKE YOUR WISH AT THE SHRINE!", 350, 600);
+        font.draw(batch, "MAKE YOUR WISH AT THE SHRINE!", 320, 600);
         font.getData().setScale(1.8f);
 
         // ปุ่มเลือกพร
@@ -112,10 +113,10 @@ public class MakeAWish implements Screen {
         // ข้อความแนะนำ
         font.getData().setScale(1.5f);
         if (!wishSelected) {
-            font.draw(batch, "Click on your choice or press 1, 2, 3!", 450, 250);
+            font.draw(batch, "Click your choice or press 1, 2, or 3", 400, 250);
         } else {
-            font.draw(batch, "Wish selected: " + wishes[selectedWish], 350, 250);
-            font.draw(batch, "Press ENTER to continue", 500, 200);
+            font.draw(batch, "Wish selected: " + wishes[selectedWish], 400, 150);
+
         }
 
         batch.end();
@@ -147,22 +148,26 @@ public class MakeAWish implements Screen {
             }
         }
 
-        // ✨ แก้ไขส่วนนี้: หลังเลือกพร กด ENTER ไปหน้า ShootScreen
-        if (wishSelected) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-                game.selectedWish = selectedWish + 1;
-                System.out.println("Wish confirmed: " + wishes[selectedWish]);
-                // เปลี่ยนไปหน้า ShootScreen แทน firstScreen
-                game.setScreen(new ShootScreen(game));
-            }
-        }
+
+
+
     }
 
     private void selectWish(int wishIndex) {
+        if (transitioning) return;
         selectedWish = wishIndex;
         wishSelected = true;
         System.out.println("Wish selected: " + wishes[wishIndex]);
+        Gdx.app.postRunnable(() -> {
+            try {
+                game.setScreen(new ShootScreen(game));
+            } catch (Exception e) {
+                // ถ้ามีปัญหา (เช่น asset หาย) จะยังไม่ปิดเกมทันที และเห็น stacktrace
+                e.printStackTrace();
+            }
+        });
     }
+
 
     @Override
     public void resize(int width, int height) {
@@ -170,14 +175,9 @@ public class MakeAWish implements Screen {
         camera.position.set(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 0);
     }
 
-    @Override
-    public void pause() {}
-
-    @Override
-    public void resume() {}
-
-    @Override
-    public void hide() {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
 
     @Override
     public void dispose() {
