@@ -45,7 +45,7 @@ public class ShootScreen implements Screen {
         font.getData().setScale(1.3f);
         font.setColor(Color.WHITE);
 
-        topLeftHUD = new TopLeftHUD("Botton/SaveBT.png", "Botton/HomeBT.png");
+
 
         background = new Texture(Gdx.files.internal("ShootAsset/background.PNG"));
         audioManager = new DialogueScreen.AudioManager();

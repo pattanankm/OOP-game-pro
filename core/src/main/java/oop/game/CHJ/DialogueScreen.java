@@ -56,7 +56,7 @@ public class DialogueScreen implements Screen {
 
         switch (npc.name) {
 
-            case "elephant":
+            case "Elephant":
                 bg = new Texture("BG/samchang.png");
                 states = new DialogueState[]{
                     new DialogueState("Elephant: Welcome to the Elephant Shrine!", new Texture("NPC/elephant_Stand.PNG"), 200, 120),
@@ -86,7 +86,7 @@ public class DialogueScreen implements Screen {
                 break;
 
 
-            case "giraffe":
+            case "Giraffe":
                 bg = new Texture("BG/FoE_BG.png");
                 states = new DialogueState[]{
                     new DialogueState("Giraffe: Hello! Welcome to the Engineering Faculty!", new Texture("NPC/Giraffe_Stand.png"), 200, 120),

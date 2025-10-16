@@ -20,6 +20,7 @@ public class Main extends Game {
     public String playerName = "";
     public String selectedGender = "";
     public Texture pixel;
+    public int selectedWish;
 
     @Override
     public void create() {
