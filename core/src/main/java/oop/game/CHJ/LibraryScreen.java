@@ -54,8 +54,16 @@ public class LibraryScreen implements Screen {
     private Texture bookIcon;
     private boolean bookVisible = false;
 
-    public LibraryScreen(Main game) {
+    private final InventoryUI inventory; // เพิ่ม InventoryUI
+
+    private boolean isQuest1Completed = false; // สำหรับ Quest 1
+
+    private float isPressedTime = 0f; //แก้บัคตัวละครติด
+    private boolean disableCollision = false;
+
+    public LibraryScreen(Main game, InventoryUI inventory) {
         this.game = game;
+        this.inventory = inventory;
     }
 
     @Override
@@ -232,9 +240,19 @@ public class LibraryScreen implements Screen {
             moving = true;
             walkFrames = backWalk;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
-            nextY -= speed * delta;
+        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
+            isPressedTime += delta; // เพิ่มเวลาที่กดค้าง
+            nextY -= speed * delta; // เดินลงปกติ
             moving = true;
+            walkFrames = frontWalk;
+
+            if (isPressedTime >= 2f) {
+                disableCollision = true; // ปิด collision หลัง 2 วินาที
+            }
+        } else {
+            isPressedTime = 0f;       // รีเซ็ตเวลา
+            disableCollision = false; // เปิด collision ปกติ
+            moving = false;
             walkFrames = frontWalk;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
@@ -270,13 +288,17 @@ public class LibraryScreen implements Screen {
             }
         }
 
-        // สร้างกล่อง hitbox ของตัวละคร
-        float playerWidth = currentTex.getWidth() / 10f * 1f;
-        float playerHeight = currentTex.getHeight() / 10f * 0.8f;
+        //ขนาดภาพที่วาดจริง
+        float characterDrawWidth = currentTex.getWidth() / 10f;
+        float characterDrawHeight = currentTex.getHeight() / 10f;
 
-        // ปรับ offset เพื่อให้ hitbox อยู่ตรงกลางและด้านล่างของตัวละคร
-        float offsetX = (currentTex.getWidth() / 10f - playerWidth) / 2f;
-        float offsetY = 0; // hitbox อยู่ที่เท้า
+        //hitbox ควรเล็กกว่าภาพ เพื่อไม่ให้หัวชน
+        float playerWidth = characterDrawWidth * 0.8f;  // 50% ของความกว้าง (แคบกว่า)
+        float playerHeight = characterDrawHeight * 0.5f; // 40% ของความสูง (เฉพาะตัวล่าง)
+
+        //offset ให้ hitbox อยู่ตรงกลางแนวนอน และอยู่ที่เท้า
+        float offsetX = (characterDrawWidth - playerWidth) / 2f;  // วางตรงกลาง
+        float offsetY = 0; // เริ่มจากเท้า (พื้นฐาน)
 
         // แยกแกน X
         Rectangle rectX = new Rectangle(
@@ -286,10 +308,12 @@ public class LibraryScreen implements Screen {
             playerHeight
         );
         boolean collidedX = false;
-        for (Rectangle r : collisionRects) {
-            if (rectX.overlaps(r)) {
-                collidedX = true;
-                break;
+        if (!disableCollision) {
+            for (Rectangle r : collisionRects) {
+                if (rectX.overlaps(r)) {
+                    collidedX = true;
+                    break;
+                }
             }
         }
         if (!collidedX) playerX = nextX;
@@ -302,10 +326,12 @@ public class LibraryScreen implements Screen {
             playerHeight
         );
         boolean collidedY = false;
-        for (Rectangle r : collisionRects) {
-            if (rectY.overlaps(r)) {
-                collidedY = true;
-                break;
+        if (!disableCollision) {
+            for (Rectangle r : collisionRects) {
+                if (rectY.overlaps(r)) {
+                    collidedY = true;
+                    break;
+                }
             }
         }
         if (!collidedY) playerY = nextY;
@@ -315,6 +341,22 @@ public class LibraryScreen implements Screen {
         float mapCenterY = 1360;
         camera.position.set(mapCenterX, mapCenterY, 0);
         camera.update();
+
+        if (bookVisible && Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
+            Rectangle bookRect   = new Rectangle(1400, 1200, 40, 40); // ตำแหน่งเดียวกับที่วาด
+
+            if (playerRect.overlaps(bookRect)) {
+                // อัปเดตเควส + อินเวนทอรี
+                boolean ok = inventory.collectItem("book");   // ← ไอคอนจะหายเทาทันที
+                if (ok) {
+                    game.questManager.onCollectItem("book");
+                    isQuest1Completed = true;
+                    // ซ่อนรูป/กันกดซ้ำ (ถ้าต้องการ)
+                    bookVisible = false;
+                }
+            }
+        }
     }
 
     private void updateInteraction() {
@@ -344,8 +386,7 @@ public class LibraryScreen implements Screen {
     private void checkDoorCollision() {
         Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
         if (doorRect != null && playerRect.overlaps(doorRect)) {
-            // เปลี่ยนไปยัง FirstScreen
-            game.setScreen(new FirstScreen(game));
+            game.setScreen(game.firstScreen);
         }
     }
 

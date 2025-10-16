@@ -85,16 +85,53 @@ public class FirstScreen implements Screen {
     private boolean hasShownLibraryHint = false;
     private boolean hasShownShrineHint = false;
 
+    //เพิ่มตัวแปรเช็คว่า initialized แล้วหรือยัง (แก้บัคเกิดที่เดิม)
+    private boolean isInitialized = false;
+
+    private float isPressedTime = 0f; //แก้บัคตัวละครติด
+    private boolean disableCollision = false;
+//    private boolean isQuest2Completed;
+
     public FirstScreen(Main game) {
+        this(game, null);
+    }
+
+    public FirstScreen(Main game, InventoryUI inventory) {
         this.game = game;
+        this.inventory = inventory;
     }
 
     @Override
     public void show() {
+        //สร้าง camera ก่อนเสมอ
+        if (camera == null) {
+            camera = new OrthographicCamera();
+            camera.setToOrtho(false,
+                Gdx.graphics.getWidth() * unitScale,
+                Gdx.graphics.getHeight() * unitScale
+            );
+        }
+
+        if (uiCamera == null) {
+            uiCamera = new OrthographicCamera();
+            uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        }
+
+        //เช็ค isInitialized
+        if (isInitialized) {
+            camera.position.set(playerX, playerY, 0);
+            camera.update();
+            uiCamera.update();
+            if (backgroundMusic != null && !backgroundMusic.isPlaying()) {
+                backgroundMusic.play();
+            }
+
+            return;
+        }
+
         map = new TmxMapLoader().load("Map/Map.tmx");
         font = new BitmapFont();
         nameLayout = new GlyphLayout();
-
         chatIcon = new Texture("Icons/Chat_Icon.png");
         handIcon = new Texture("Icons/Hand_Icon.png");
         gearIcon = new Texture("Icons/gear.PNG");
@@ -123,14 +160,6 @@ public class FirstScreen implements Screen {
         int tilePixel = map.getProperties().get("tilewidth", Integer.class);
 
         renderer = new OrthogonalTiledMapRenderer(map, unitScale);
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false,
-            Gdx.graphics.getWidth() * unitScale,
-            Gdx.graphics.getHeight() * unitScale
-        );
-
-        uiCamera = new OrthographicCamera();
-        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // สร้าง NPC
         NPC penguin = new NPC(2358, 2340, "NPC/Penguin_Stand.png", "Today is very cold~", "Penguin");
@@ -138,8 +167,8 @@ public class FirstScreen implements Screen {
         NPC giraffe = new NPC(1400, 1700, "NPC/Giraffe_Stand.png", "We are all Entaneer!", "Giraffe");
         npcs.add(giraffe);
         NPC elephant = new NPC(3000, 1700, "NPC/elephant_Stand.PNG", "Welcome to Elephant Shrine!", "Elephant");
-        elephant.width = 100;  // ความกว้าง (ค่าเดิมประมาณ 100)
-        elephant.height = 130; // ความสูง (ค่าเดิมประมาณ 150)
+        elephant.width = 100;
+        elephant.height = 130;
         npcs.add(elephant);
 
         MapLayer objectLayer = map.getLayers().get("Collision");
@@ -153,7 +182,7 @@ public class FirstScreen implements Screen {
             }
         }
 
-        // โหลดภาพเคลื่อนไหว
+        // โหลดท่าเดิน
         frontWalk = new Texture[] {
             new Texture("CharMove/Girl_FrontLeft1.png"),
             new Texture("CharMove/Girl_FrontStand.png"),
@@ -177,31 +206,14 @@ public class FirstScreen implements Screen {
 
         frontTex = new Texture("CharMove/Girl_Front.png");
         currentTex = frontTex;
+
         batch = new SpriteBatch();
-
-        float spawnX = (mapWidth * tilePixel * 0.495f) / 2.5f;
-        float spawnY = (mapHeight * tilePixel * 0.48f) / 2.5f;
-        playerX = spawnX;
-        playerY = spawnY;
-//
-//        // โหลดตำแหน่งจากเซฟ หรือใช้ตำแหน่งเริ่มต้น
-//        if (SaveManager.hasSave()) {
-//            SaveManager.SaveState s = SaveManager.load();
-//            playerX = s.x;
-//            playerY = s.y;
-//            // ตรวจสอบว่ามีเควสไหนเสร็จแล้วบ้าง
-//            if (s.gear) objectVisible = true;
-//        } else {
-//
-//        }
-
-        camera.position.set(playerX, playerY, 0);
-        camera.update();
-        uiCamera.update();
 
         // สร้าง UI components
         topLeftHUD = new TopLeftHUD("Botton/SaveBT.png", "Botton/HomeBT.png");
-        inventory = new InventoryUI(16f, 16f, 48f, 8f);
+        if (inventory == null) {
+            inventory = new InventoryUI(16f, 16f, 48f, 8f);
+        }
         hintTextUI = new HintTextUI();
         pauseMenu = new PauseMenu();
 
@@ -220,12 +232,23 @@ public class FirstScreen implements Screen {
                 }
             }
         }
+
         if (elephantShrineZone == null) {
             elephantShrineZone = new Rectangle(1680, 900, 220, 160);
         }
 
-        // แสดงข้อความเริ่มต้น
         showContextualHint();
+        float spawnX = (mapWidth * tilePixel+30) / 2.5f;
+        float spawnY = (mapHeight * tilePixel * 0.5f) / 2.5f;
+        playerX = spawnX;
+        playerY = spawnY;
+
+        camera.position.set(playerX, playerY, 0);
+        camera.update();
+        uiCamera.update();
+
+        // บันทึกว่า initialized แล้ว
+        isInitialized = true;
     }
 
     private void saveGame() {
@@ -305,15 +328,14 @@ public class FirstScreen implements Screen {
         Rectangle triggerArea = new Rectangle(2200, 2400, 100, 100);
         Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
 
-        if (game.questManager.isQuest1Started()) {
-            if (playerRect.overlaps(triggerArea)) {
-                font.draw(batch, "Tap to get inside!", 2240, 2440);
-                if (Gdx.input.justTouched()){
-                    game.setScreen(new LibraryScreen(game));
-                }
+       // ตรวจสอบว่า Quest 1 เริ่มแล้วก่อน
+        if (game.questManager.isQuest1Started() && playerRect.overlaps(triggerArea)) {
+            font.draw(batch, "Tap to get inside!", triggerArea.x + 40, triggerArea.y + 40);
+
+            if (Gdx.input.justTouched()) {
+                game.setScreen(new LibraryScreen(game,inventory));
             }
         }
-
         // Quest 2
         Rectangle handRect = new Rectangle(1600, 800, 50, 50);
         if (game.questManager.isQuest2Started()) {
@@ -344,6 +366,43 @@ public class FirstScreen implements Screen {
             currentTex.getWidth() / tileSize,
             currentTex.getHeight() / tileSize
         );
+
+        //Elephant Shrine Quest (ต้องเก็บ Gear + Book เสร็จก่อน)
+        if (game.questManager.isGearCollected() && game.questManager.isBookCollected()) {
+            // วาดข้อความที่ตำแหน่ง Elephant
+            NPC elephant = null;
+            for (NPC npc : npcs) {
+                if ("Elephant".equals(npc.name)) {
+                    elephant = npc;
+                    break;
+                }
+            }
+
+            if (elephant != null) {
+                font.setColor(Color.YELLOW);
+                font.getData().setScale(2f);
+                font.draw(batch, "Make a wish!", elephant.x + 10, elephant.y + elephant.height + 40);
+                font.getData().setScale(1f);
+                font.setColor(Color.WHITE);
+
+                // ตรวจคลิก
+                if (Gdx.input.justTouched()) {
+                    Vector3 click = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+                    camera.unproject(click);
+
+                    Rectangle elephantClickZone = new Rectangle(elephant.x, elephant.y, elephant.width, elephant.height + 50);
+                    if (elephantClickZone.contains(click.x, click.y)) {
+                        // Complete quest 1 & 2
+                        game.questManager.completeQuest1();
+                        game.questManager.completeQuest2();
+
+                        // ไปหน้า Make a Wish
+                        game.setScreen(new MakeAWish(game));
+                        return;
+                    }
+                }
+            }
+        }
 
         // วาดชื่อผู้เล่นใต้ตัวละคร
         if (!game.playerName.isEmpty()) {
@@ -396,9 +455,6 @@ public class FirstScreen implements Screen {
                 if (npc.isPlayerNear(playerX, playerY, 80f)) {
                     Rectangle chatRect = new Rectangle(npc.x + 55, npc.y + 60, 24, 24);
                     if (chatRect.contains(click.x, click.y)) {
-                        if (npc.name.equals("Giraffe")) {
-                            game.questManager.onTalkGiraffe();
-                        }
                         game.setScreen(new DialogueScreen(game, npc));
                         return;
                     }
@@ -406,7 +462,7 @@ public class FirstScreen implements Screen {
             }
 
             if (game.questManager.isQuest1Started() && playerRect.overlaps(triggerArea)) {
-                game.setScreen(new LibraryScreen(game));
+                game.setScreen(new LibraryScreen(game,inventory));
             }
         }
     }
@@ -463,11 +519,27 @@ public class FirstScreen implements Screen {
             moving = true;
             walkFrames = backWalk;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
-            nextY -= speed * delta;
+//        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
+//            nextY -= speed * delta;
+//            moving = true;
+//            walkFrames = frontWalk;
+//        }
+        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
+            isPressedTime += delta; // เพิ่มเวลาที่กดค้าง
+            nextY -= speed * delta; // เดินลงปกติ
             moving = true;
             walkFrames = frontWalk;
+
+            if (isPressedTime >= 2f) {
+                disableCollision = true; // ปิด collision หลัง 2 วินาที
+            }
+        } else {
+            isPressedTime = 0f;       // รีเซ็ตเวลา
+            disableCollision = false; // เปิด collision ปกติ
+            moving = false;
+            walkFrames = frontWalk;
         }
+
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A)) {
             nextX -= speed * delta;
             moving = true;
@@ -504,17 +576,6 @@ public class FirstScreen implements Screen {
             }, 0.3f);
         }
 
-        for (NPC npc : npcs) {
-            if (npc.isPlayerNear(playerX, playerY, 80f)) {
-                if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-                    if (npc.name.equals("Giraffe")) {
-                        game.questManager.onTalkGiraffe();
-                    }
-                    game.setScreen(new DialogueScreen(game, npc));
-                }
-            }
-        }
-
         if (walkFrames != previousWalkFrames) {
             currentFrame = 0;
             walkTime = 0f;
@@ -533,39 +594,61 @@ public class FirstScreen implements Screen {
             currentFrame = 0;
         }
 
-        Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
-        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
-            if (playerRect.overlaps(gearZone) && inventory.collectItem("gear")) {
-                game.questManager.onCollectItem("gear");
-                hintTextUI.showHint("Collected the gear!");
-            }
-            if (playerRect.overlaps(bookZone) && inventory.collectItem("book")) {
-                game.questManager.onCollectItem("book");
-                hintTextUI.showHint("Collected the book!");
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            Rectangle playerRect = new Rectangle(playerX, playerY, 100, 150);
+
+            if (playerRect.overlaps(gearZone)) {
+                if (inventory.collectItem("gear")) {
+                    game.questManager.onCollectItem("gear");
+                    hintTextUI.showHint("Collected the gear!");
+                }
             }
         }
 
-        float playerWidth = currentTex.getWidth() / 10f;
-        float playerHeight = currentTex.getHeight() / 10f * 0.4f;
-        float offsetX = (currentTex.getWidth() / 10f - playerWidth) / 2f;
-        float offsetY = 0;
+        //ขนาดภาพที่วาดจริง
+        float characterDrawWidth = currentTex.getWidth() / 10f;
+        float characterDrawHeight = currentTex.getHeight() / 10f;
 
-        Rectangle rectX = new Rectangle(nextX + offsetX, playerY + offsetY, playerWidth, playerHeight);
+        //hitbox
+        float playerWidth = characterDrawWidth * 0.8f;
+        float playerHeight = characterDrawHeight * 0.5f;
+
+        //offset อยู่ตรงกลางแนวนอน และอยู่ที่เท้า
+        float offsetX = (characterDrawWidth - playerWidth) / 2f;  // วางตรงกลาง
+        float offsetY = 0; // เริ่มจากเท้า (พื้นฐาน)
+
+        // แยกแกน X
+        Rectangle rectX = new Rectangle(
+            nextX + offsetX,
+            playerY + offsetY,
+            playerWidth,
+            playerHeight
+        );
         boolean collidedX = false;
-        for (Rectangle r : collisionRects) {
-            if (rectX.overlaps(r)) {
-                collidedX = true;
-                break;
+        if (!disableCollision) {
+            for (Rectangle r : collisionRects) {
+                if (rectX.overlaps(r)) {
+                    collidedX = true;
+                    break;
+                }
             }
         }
         if (!collidedX) playerX = nextX;
 
-        Rectangle rectY = new Rectangle(playerX + offsetX, nextY + offsetY, playerWidth, playerHeight);
+        // แยกแกน Y
+        Rectangle rectY = new Rectangle(
+            playerX + offsetX,
+            nextY + offsetY,
+            playerWidth,
+            playerHeight
+        );
         boolean collidedY = false;
-        for (Rectangle r : collisionRects) {
-            if (rectY.overlaps(r)) {
-                collidedY = true;
-                break;
+        if (!disableCollision) {
+            for (Rectangle r : collisionRects) {
+                if (rectY.overlaps(r)) {
+                    collidedY = true;
+                    break;
+                }
             }
         }
         if (!collidedY) playerY = nextY;
@@ -596,7 +679,7 @@ public class FirstScreen implements Screen {
     private void goToShootScreen() {
         if (backgroundMusic != null) backgroundMusic.stop();
         if (walkSound != null) walkSound.stop();
-        game.setScreen(new ShootScreen(game));
+        game.setScreen(new MakeAWish(game));
     }
 
     @Override
@@ -656,3 +739,5 @@ public class FirstScreen implements Screen {
         }
     }
 }
+
+

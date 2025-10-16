@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-/** แสดงข้อความใบ้ตรงกลางด้านล่างหน้าจอ พร้อม fade in/out */
 public class HintTextUI {
 
     private final BitmapFont font;
@@ -35,7 +34,7 @@ public class HintTextUI {
         pm.dispose();
     }
 
-    /** แสดงข้อความใหม่ */
+    //แสดงข้อความใหม่
     public void showHint(String text) {
         if (!text.equals(currentHint)) {
             currentHint = text;
@@ -43,7 +42,7 @@ public class HintTextUI {
         }
     }
 
-    /** อัพเดตเวลา */
+    //อัพเดตเวลา
     public void update(float delta) {
         if (currentHint.isEmpty()) return;
 
@@ -69,7 +68,7 @@ public class HintTextUI {
         }
     }
 
-    /** วาดข้อความ (ใช้กล้อง UI) */
+    // วาดข้อความ (ใช้กล้อง UI)
     public void render(SpriteBatch batch, float screenWidth, float screenHeight) {
         if (currentHint.isEmpty() || alpha <= 0) return;
 

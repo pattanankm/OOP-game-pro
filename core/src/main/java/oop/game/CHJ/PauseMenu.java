@@ -11,39 +11,38 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 
-/** เมนู Pause ใช้ปุ่มรูปภาพ: Begin, Resume, Exit */
 public class PauseMenu {
 
     public enum Action { NONE, BEGIN, RESUME, EXIT }
 
-    // พื้นหลังมืดโปร่งใส
+    //พื้นหลังมืดโปร่งใส
     private final Texture dimPx;
 
-    // ปุ่มเป็นรูปภาพ
+    //ปุ่มเป็นรูปภาพ
     private final Texture beginTex;
     private final Texture resumeTex;
     private final Texture exitTex;
 
-    // กรอบตรวจคลิก
+    //ตรวจคลิก
     private final Rectangle beginBounds = new Rectangle();
     private final Rectangle resumeBounds = new Rectangle();
     private final Rectangle exitBounds = new Rectangle();
 
-    // ui
+    //ui
     private final Vector3 tmp = new Vector3();
     private final BitmapFont font = new BitmapFont();
 
-    // ควบคุมการแสดงผล
+    //การแสดงผล
     private boolean visible = false;
 
-    // สเกลของปุ่มและช่องไฟ
+    //สเกลของปุ่มและช่องไฟ
     private float buttonScale = 0.7f;
     private float gapY = 22f;
 
-    // 🔊 เสียงคลิก (ใช้ไฟล์เดียวกับ HUD)
+    //เสียงคลิก (ใช้ไฟล์เดียวกับ HUD)
     private final Sound clickSound;
 
-    // เงาตอนกด
+    //เงาตอนกด
     private final float pressAlpha = 0.4f;
 
     public PauseMenu() {
@@ -70,7 +69,7 @@ public class PauseMenu {
     public void hide()  { visible = false; }
     public boolean isVisible() { return visible; }
 
-    /** จัดวางปุ่มให้อยู่กึ่งกลางจอ */
+    //ปุ่มอยู่กึ่งกลางจอ
     private void layout(float screenW, float screenH) {
         float bw = beginTex.getWidth()  * buttonScale;
         float bh = beginTex.getHeight() * buttonScale;
@@ -90,26 +89,26 @@ public class PauseMenu {
         exitBounds.set(cx + (maxW - ew)/2f, startY - (bh + gapY + rh + gapY + 1f), ew, eh);
     }
 
-    /** วาดเมนู */
+    //วาดเมนู
     public void render(SpriteBatch batch, OrthographicCamera uiCamera) {
         if (!visible) return;
 
-        // ฉากหลังมืด
+        //ฉากหลังมืด
         batch.setColor(0, 0, 0, 0.75f);
         batch.draw(dimPx, 0, 0, uiCamera.viewportWidth, uiCamera.viewportHeight);
         batch.setColor(Color.WHITE);
 
-        // สถานะกด (กำหนดจากการแตะและตำแหน่งเมาส์)
+        //กด
         boolean pressingBegin  = isPressed(beginBounds, uiCamera);
         boolean pressingResume = isPressed(resumeBounds, uiCamera);
         boolean pressingExit   = isPressed(exitBounds, uiCamera);
 
-        // วาดปุ่ม (ถ้าไม่ได้กด ให้ทำเหมือน hover เล็กน้อยตอนแตะค้าง)
+        //วาดปุ่ม (ถ้าไม่ได้กด = hover เล็กน้อยตอนแตะค้าง)
         drawButton(batch, beginTex,  beginBounds,  !pressingBegin);
         drawButton(batch, resumeTex, resumeBounds, !pressingResume);
         drawButton(batch, exitTex,   exitBounds,   !pressingExit);
 
-        // เงาทับเมื่อ "กำลังกด"
+        //เงาทับกำลังกด
         if (pressingBegin) {
             batch.setColor(0, 0, 0, pressAlpha);
             batch.draw(dimPx, beginBounds.x, beginBounds.y, beginBounds.width, beginBounds.height);
@@ -140,7 +139,7 @@ public class PauseMenu {
         return r.contains(tmp.x, tmp.y);
     }
 
-    /** คืนค่าการคลิกปุ่ม + เล่นเสียงคลิก */
+    //คืนค่าการคลิกปุ่ม + เล่นเสียงคลิก
     public Action checkInput(OrthographicCamera uiCamera) {
         if (!visible || !Gdx.input.justTouched()) return Action.NONE;
 
@@ -152,7 +151,7 @@ public class PauseMenu {
         return Action.NONE;
     }
 
-    /** เรียกจาก Screen.resize(...) */
+    //เรียกจาก Screen.resize
     public void onResize(int width, int height) {
         layout(width, height);
     }

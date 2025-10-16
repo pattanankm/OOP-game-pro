@@ -25,6 +25,14 @@ public class InventoryUI {
     private final float x, y, slot, pad;
     private final Texture px;
 
+    public void setCollected(String id, boolean value) {
+        for (Item it: items) if (it.id.equals(id)) { it.collected = value; return; }
+    }
+    public boolean isCollected(String id) {
+        for (Item it: items) if (it.id.equals(id)) return it.collected;
+        return false;
+    }
+
     /** startX,startY = มุมซ้ายล่างของ “จอ” (หน่วยพิกเซลจอ ไม่ผูกกับกล้องโลก) */
     public InventoryUI(float startX, float startY, float slotSize, float slotPadding) {
         this.x = startX; this.y = startY; this.slot = slotSize; this.pad = slotPadding;

@@ -22,10 +22,10 @@ public class TopLeftHUD {
     private final float size;
     private final float margin;
 
-    // 🎵 เสียงคลิก
+    //เสียงคลิก
     private final Sound clickSound;
 
-    // 🌫️ สถานะกดปุ่ม (เพื่อแสดงเงาโปร่งแสง)
+    //สถานะกดปุ่ม
     private boolean savePressed = false;
     private boolean homePressed = false;
     private float pressAlpha = 0.4f; // ความเข้มของเงา (0=โปร่ง,1=ทึบ)
@@ -47,18 +47,18 @@ public class TopLeftHUD {
         clickSound = Gdx.audio.newSound(Gdx.files.internal("Music/Click/Click.mp3"));
     }
 
-    /** เรียกทุกครั้งก่อนวาด ถ้าหน้าต่างเปลี่ยนขนาดจะอัพเดตตำแหน่งปุ่มอัตโนมัติ */
+    //เรียกทุกครั้งก่อนวาด อัพเดตตำแหน่งปุ่มอัตโนมัติ
     public void onResize(int width, int height) {
         saveRect.setPosition(margin, height - margin - size);
         homeRect.setPosition(margin + size + 8, height - margin - size);
     }
 
-    /** วาดปุ่ม (ใช้กล้อง UI) */
+    // วาดปุ่ม (ใช้กล้อง UI)
     public void render(SpriteBatch batch) {
         batch.draw(saveTex, saveRect.x, saveRect.y, saveRect.width, saveRect.height);
         batch.draw(homeTex, homeRect.x, homeRect.y, homeRect.width, homeRect.height);
 
-        // 🌫️ วาดเงาทับเมื่อกดปุ่ม
+        //วาดเงาทับเมื่อกดปุ่ม
         if (savePressed) {
             batch.setColor(0, 0, 0, pressAlpha);
             batch.draw(saveTex, saveRect.x, saveRect.y, saveRect.width, saveRect.height);
@@ -71,7 +71,7 @@ public class TopLeftHUD {
         }
     }
 
-    /** ตรวจคลิกแล้วบอกว่ากดปุ่มไหน (ใช้กล้อง UI) */
+    //ตรวจคลิกแล้วบอกว่ากดปุ่มไหน (ใช้กล้อง UI)
     public Clicked updateAndHandleInput(OrthographicCamera uiCamera) {
         if (Gdx.input.justTouched()) {
             uiCamera.unproject(tmp.set(Gdx.input.getX(), Gdx.input.getY(), 0));
@@ -93,7 +93,6 @@ public class TopLeftHUD {
             savePressed = false;
             homePressed = false;
         }
-
         return Clicked.NONE;
     }
 

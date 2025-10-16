@@ -22,7 +22,7 @@ public class NPC {
     public NPC(Texture npcTex, float x, float y) {
     }
 
-    // เช็คว่า player อยู่ใกล้ NPC หรือไม่
+    //เช็คว่า player อยู่ใกล้ NPC
     public boolean isPlayerNear(float playerX, float playerY, float interactionRange) {
         float dx = (x + width/2) - (playerX + width/2);
         float dy = (y + height/2) - (playerY + height/2);

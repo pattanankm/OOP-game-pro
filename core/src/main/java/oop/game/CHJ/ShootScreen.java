@@ -76,41 +76,41 @@ public class ShootScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // ----- WORLD LAYER -----
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
         try {
-            batch.begin(); // รอบที่ 1: วาดฉาก/ตัวละคร/เกมเพลย์
+            batch.begin();
             batch.draw(background, 0, 0, 800, 600);
 
             if (!gameFinished) {
-                boss.render(batch);     // ❗ เมธอดพวกนี้ห้ามมี begin/end ข้างใน
+                boss.render(batch);
                 player.render(batch);
-                drawUI();               // ถ้า drawUI() วาด "in-game UI" ด้วย SpriteBatch เช่นหลอดเลือด
+                drawUI();               //วาด in-game UI ด้วย SpriteBatch ex. blood
+
                 // ให้แน่ใจว่าไม่มี begin/end อยู่ในนั้น
             } else {
                 if ("VICTORY".equals(gameResult)) {
-                    drawVictoryScreen(delta); // ❗ ไม่มี begin/end ภายใน
+                    drawVictoryScreen(delta);
                 } else {
-                    drawGameOver();           // ❗ ไม่มี begin/end ภายใน
+                    drawGameOver();
                 }
-                drawButtons();                // ❗ ไม่มี begin/end ภายใน
+                drawButtons();
             }
         } finally {
             if (batch.isDrawing()) batch.end();
         }
 
-        // ----- HUD LAYER (จอทับ, ใช้กล้อง UI) -----
+        //HUD LAYER---
         batch.setProjectionMatrix(uiCamera.combined);
         try {
-            batch.begin(); // รอบที่ 2: วาด HUD
-            topLeftHUD.render(batch);  // ❗ ห้าม begin/end ภายใน
+            batch.begin(); //วาด HUD
+            topLeftHUD.render(batch);
         } finally {
             if (batch.isDrawing()) batch.end();
         }
 
-        // ----- INPUT / LOGIC หลังจากจบการวาดแต่ละรอบ -----
+        //หลังจากจบการวาดแต่ละรอบ
         switch (topLeftHUD.updateAndHandleInput(uiCamera)) {
             case SAVE:
                 saveShootState();
@@ -118,7 +118,7 @@ public class ShootScreen implements Screen {
             case HOME:
                 audioManager.stopBGM();
                 game.setScreen(new MainMenuScreen(game));
-                return; // ตรงนี้โอเค เพราะเราปิด batch ไปแล้ว
+                return;
             default:
                 break;
         }

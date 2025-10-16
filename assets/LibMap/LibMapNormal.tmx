@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="56" tileheight="56" infinite="0" nextlayerid="6" nextobjectid="3">
- <tileset firstgid="1" source="Lib_Map.tsx"/>
+ <tileset firstgid="1" source="../../../../University/Year2/1_68/OOP/CHJ/assets/LibMap/Lib_Map.tsx"/>
  <layer id="1" name="Ground" width="50" height="50">
   <data encoding="csv">
 188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,188,
@@ -113,6 +113,6 @@
   <object id="2" x="1326" y="1783.15" width="133.271" height="9.298"/>
  </objectgroup>
  <imagelayer id="5" name="normalOne" offsetx="1370.99" offsety="1279.59">
-  <image source="normalOne.png" width="80" height="146"/>
+  <image source="../../../../University/Year2/1_68/OOP/CHJ/assets/LibMap/normalOne.png" width="80" height="146"/>
  </imagelayer>
 </map>
