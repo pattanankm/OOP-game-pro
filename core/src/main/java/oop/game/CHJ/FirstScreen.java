@@ -525,17 +525,17 @@ public class FirstScreen implements Screen {
 //            walkFrames = frontWalk;
 //        }
         else if (Gdx.input.isKeyPressed(Input.Keys.DOWN) || Gdx.input.isKeyPressed(Input.Keys.S)) {
-            isPressedTime += delta; // เพิ่มเวลาที่กดค้าง
-            nextY -= speed * delta; // เดินลงปกติ
+            isPressedTime += delta; //เพิ่มเวลาที่กดค้าง
+            nextY -= speed * delta; //เดินลงปกติ
             moving = true;
             walkFrames = frontWalk;
 
             if (isPressedTime >= 2f) {
-                disableCollision = true; // ปิด collision หลัง 2 วินาที
+                disableCollision = true; //ปิด collision หลัง 2 วินาที
             }
         } else {
-            isPressedTime = 0f;       // รีเซ็ตเวลา
-            disableCollision = false; // เปิด collision ปกติ
+            isPressedTime = 0f;       //รีเซ็ตเวลา
+            disableCollision = false; //เปิด collision ปกติ
             moving = false;
             walkFrames = frontWalk;
         }
